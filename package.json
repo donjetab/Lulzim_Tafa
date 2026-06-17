@@ -1,0 +1,12 @@
+{
+  "name": "lulzim-tafa",
+  "private": true,
+  "scripts": {
+    "dev": "npm.cmd --prefix frontend run dev",
+    "build": "npm.cmd --prefix frontend run build",
+    "backend": "dotnet run --project backend/LulzimTafa.Api.csproj"
+  },
+  "workspaces": [
+    "frontend"
+  ]
+}

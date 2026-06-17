@@ -1,0 +1,33 @@
+import { Route, Routes } from 'react-router-dom';
+import Layout from './components/Layout.jsx';
+import Home from './pages/Home.jsx';
+import About from './pages/About.jsx';
+import Books from './pages/Books.jsx';
+import BookDetails from './pages/BookDetails.jsx';
+import Poetry from './pages/Poetry.jsx';
+import PoetryDetails from './pages/PoetryDetails.jsx';
+import News from './pages/News.jsx';
+import NewsDetails from './pages/NewsDetails.jsx';
+import Awards from './pages/Awards.jsx';
+import Contact from './pages/Contact.jsx';
+import Admin from './pages/Admin.jsx';
+
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/books" element={<Books />} />
+        <Route path="/books/:slug" element={<BookDetails />} />
+        <Route path="/poetry" element={<Poetry />} />
+        <Route path="/poetry/:slug" element={<PoetryDetails />} />
+        <Route path="/news" element={<News />} />
+        <Route path="/news/:slug" element={<NewsDetails />} />
+        <Route path="/awards" element={<Awards />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/admin" element={<Admin />} />
+      </Route>
+    </Routes>
+  );
+}

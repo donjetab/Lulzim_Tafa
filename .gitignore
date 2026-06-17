@@ -1,0 +1,11 @@
+node_modules/
+dist/
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.log
+backend/wwwroot/uploads/*
+!backend/wwwroot/uploads/.gitkeep
