@@ -1,64 +1,124 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import AwardCard from '../components/AwardCard.jsx';
-import BookCard from '../components/BookCard.jsx';
 import NewsCard from '../components/NewsCard.jsx';
-import PoemCard from '../components/PoemCard.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { awards, books, newsArticles, poems, siteSettings } from '../data/content.js';
+import { books, newsArticles, poems } from '../data/content.js';
+
+const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
+
+function getBookMockup(path) {
+  if (!path) return null;
+  const filename = path.split('/').pop();
+  return Object.entries(bookMockupAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+}
 
 export default function Home() {
-  const featuredBooks = books.filter((book) => book.featured);
+  const quoteRef = useRef(null);
+  const featuredBooks = books.slice(0, 4);
   const featuredPoem = poems.find((poem) => poem.featured);
   const featuredNews = newsArticles.filter((item) => item.featured).slice(0, 3);
 
+  useEffect(() => {
+    const section = quoteRef.current;
+    if (!section) return undefined;
+
+    let frame = 0;
+
+    const updateParallax = () => {
+      const rect = section.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || 1;
+      const progress = Math.min(1, Math.max(0, (viewportHeight - rect.top) / (viewportHeight + rect.height)));
+      const offset = (progress - 0.5) * 220;
+      section.style.setProperty('--quote-parallax-y', `${offset}px`);
+      frame = 0;
+    };
+
+    const requestUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateParallax);
+    };
+
+    updateParallax();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+    };
+  }, []);
+
   return (
     <>
-      <section className="hero">
+      <section className="hero home-hero">
         <div className="hero-copy">
-          <p className="eyebrow">Official literary archive</p>
-          <h1>{siteSettings.heroTitle}</h1>
-          <p>{siteSettings.heroText}</p>
+          <span className="gold-rule" aria-hidden="true" />
+          <h1>Lulzim Tafa</h1>
+          <p className="hero-subtitle">A voice shaped by scholarship, literature, and civic reflection.</p>
+          <span className="gold-rule short" aria-hidden="true" />
+          <p>An authorial space dedicated to books, poetry, public thought, and the intellectual world of Lulzim Tafa</p>
           <div className="button-row">
             <Link className="button-primary" to="/books">Explore Books</Link>
             <Link className="button-secondary" to="/poetry">Read Poetry</Link>
           </div>
         </div>
-        <div className="hero-portrait" aria-label="Author portrait placeholder">
-          <span>Lulzim Tafa</span>
-        </div>
       </section>
 
-      <section className="section">
-        <SectionHeading eyebrow="Latest books" title="Selected Works" text="Book entities are reused across home, listing, and detail pages." />
-        <div className="book-grid featured-grid">
-          {featuredBooks.map((book) => <BookCard key={book.id} book={book} featured />)}
-        </div>
-      </section>
+      <div className="home-page-background">
+        <section className="section home-books">
+          <SectionHeading
+            eyebrow="Featured books"
+            title="Latest Books"
+            text="The first reading of the site should happen visually. Covers, titles, and concise descriptions need room to breathe."
+          />
+          <div className="home-book-row">
+            {featuredBooks.map((book, index) => (
+              <Link className={`home-book-mockup book-tone-${index + 1}`} key={book.id} to={`/books/${book.slug}`}>
+                {getBookMockup(book.mockupImage) ? (
+                  <img className="home-book-image" src={getBookMockup(book.mockupImage)} alt={`${book.title} book mockup`} />
+                ) : (
+                  <span>{book.title}</span>
+                )}
+              </Link>
+            ))}
+          </div>
+          <Link className="button-secondary centered-button" to="/books">View All Books</Link>
+        </section>
 
-      <section className="section split-section">
-        <SectionHeading eyebrow="Poetry preview" title="A poem on parchment" text="The same poem record appears on the Poetry page and details page." />
-        {featuredPoem && <PoemCard poem={featuredPoem} />}
-      </section>
+        <section className="home-poetry">
+          <div className="home-poetry-copy">
+            <p className="eyebrow">Poetry & Creative Works</p>
+            <h2>A Poetic Voice Shaped by Memory, Silence, and Reflection</h2>
+            <span className="gold-rule short" aria-hidden="true" />
+            <p>Lulzim Tafa's poetry moves between personal memory, collective experience, and the quiet tension of human existence.</p>
+            <Link className="button-primary" to="/poetry">Explore Poetry</Link>
+          </div>
+          {featuredPoem && (
+            <Link className="home-poem-sheet" to={`/poetry/${featuredPoem.slug}`}>
+              <div className="home-poem-text">
+                <h3>Andrra eshte strehe</h3>
+                <p>{featuredPoem.body.split('\n').slice(0, 8).join('\n')}</p>
+              </div>
+            </Link>
+          )}
+        </section>
 
-      <section className="quote-banner">
-        <p>“Literature keeps the archive of feeling alive.”</p>
-      </section>
+        <section className="quote-banner" ref={quoteRef}>
+          <p>"Literature is not merely written - it is lived, examined, and questioned."</p>
+        </section>
 
-      <section className="section">
-        <SectionHeading eyebrow="News & updates" title="Recent Notes" />
-        <div className="news-grid">
-          {featuredNews.map((item) => <NewsCard key={item.id} item={item} />)}
-        </div>
-      </section>
-
-      <section className="section">
-        <SectionHeading eyebrow="Recognition" title="Featured Honors" />
-        <div className="award-grid featured-grid">
-          {awards.filter((award) => award.featured).slice(0, 3).map((award) => (
-            <AwardCard key={award.id} award={award} featured />
-          ))}
-        </div>
-      </section>
+        <section className="section home-news">
+          <SectionHeading
+            eyebrow="Latest News"
+            title="News & Updates"
+            text="The first reading of the site should happen visually. Covers, titles, and concise descriptions need room to breathe."
+          />
+          <div className="news-grid">
+            {featuredNews.map((item) => <NewsCard key={item.id} item={item} />)}
+          </div>
+          <Link className="button-secondary centered-button" to="/news">View All News</Link>
+        </section>
+      </div>
     </>
   );
 }

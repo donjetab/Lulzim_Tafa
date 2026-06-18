@@ -8,9 +8,10 @@ export const siteSettings = {
   contactPhone: '+383 00 000 000',
   location: 'Prishtina, Kosovo',
   socialLinks: [
-    { id: 1, label: 'Facebook', url: '#' },
-    { id: 2, label: 'Instagram', url: '#' },
-    { id: 3, label: 'LinkedIn', url: '#' },
+    { id: 1, label: 'Lulzim Tafa', icon: 'website', url: '#' },
+    { id: 2, label: 'lulzim.tafa', icon: 'facebook', url: '#' },
+    { id: 3, label: 'lulzimtafa.official', icon: 'instagram', url: '#' },
+    { id: 4, label: 'Lulzim Tafa', icon: 'linkedin', url: '#' },
   ],
 };
 
@@ -24,7 +25,7 @@ export const books = [
     location: 'Prishtina',
     featured: true,
     coverImage: '/assets/books/placeholder-book-1.webp',
-    mockupImage: '/assets/mockups/placeholder-book-mockup-1.webp',
+    mockupImage: '/assets/mockups/hp-antologji-personale.png',
     summary:
       'A selected body of poems that gathers major themes from Tafa’s literary voice: witness, exile, affection, irony, and civic memory.',
     description:
@@ -32,14 +33,14 @@ export const books = [
   },
   {
     id: 2,
-    slug: 'territory-of-words',
-    title: 'Territory of Words',
-    category: 'Essays',
+    slug: 'ekspozite-me-enderra',
+    title: 'Ekspozitë me ëndërrra',
+    category: 'Poetry',
     year: 2021,
     location: 'Skopje',
     featured: true,
     coverImage: '/assets/books/placeholder-book-2.webp',
-    mockupImage: '/assets/mockups/placeholder-book-mockup-2.webp',
+    mockupImage: '/assets/mockups/hp-ekspozite-me-enderra.png',
     summary:
       'Academic and literary reflections arranged as a quiet map of language, identity, and public responsibility.',
     description:
@@ -47,19 +48,34 @@ export const books = [
   },
   {
     id: 3,
-    slug: 'letters-from-the-university',
-    title: 'Letters from the University',
-    category: 'Academic',
+    slug: 'rivali-i-adamit',
+    title: 'Rivali i Adamit',
+    category: 'Poetry',
     year: 2019,
     location: 'Tirana',
     featured: false,
     coverImage: '/assets/books/placeholder-book-3.webp',
-    mockupImage: '/assets/mockups/placeholder-book-mockup-3.webp',
+    mockupImage: '/assets/mockups/hp-rivali-adamit.png',
     summary:
       'A reflective academic volume about institutions, culture, and the responsibility of teaching.',
     description:
       'This is sample content for the first implementation and should later be managed through the admin panel.',
   },
+  {
+    id: 4,
+    slug: 'flirt',
+    title: 'Flirt',
+    category: 'Poetry',
+    year: 2020,
+    location: 'Prishtina',
+    featured: false,
+    coverImage: '/assets/books/placeholder-book-4.webp',
+    mockupImage: '/assets/mockups/hp-flirt.png',
+    summary:
+      'A collection of poems that explore the nuances of human connection and desire.',
+    description:
+      'This is sample content for the first implementation and should later be managed through the admin panel.',
+  }
 ];
 
 export const poemLanguages = [
@@ -121,10 +137,10 @@ export const newsArticles = [
   {
     id: 1,
     slug: 'literary-evening-in-prishtina',
-    title: 'Literary Evening in Prishtina',
+    title: 'Poeti Lulzim Tafa nderohet me çmimin mbarëkombëtar për poezi “At Gjergj Fishta”',
     category: 'News',
-    date: '2026-05-18',
-    image: '/assets/news/placeholder-news-1.webp',
+    date: '2025-10-24',
+    image: '/assets/news/Lulzim-Tafa-Lezhe.jpg',
     excerpt:
       'A gathering dedicated to poetry, public memory, and the role of literature in civic life.',
     body:
@@ -137,10 +153,10 @@ export const newsArticles = [
   {
     id: 2,
     slug: 'interview-on-literary-memory',
-    title: 'Interview on Literary Memory',
+    title: 'U mbajt mbrëmja letrare “Shihemi te Kroni i Traboinit” në Tuz, me pjesëmarrjen e poetit Lulzim Tafa.',
     category: 'Interview',
     date: '2026-04-03',
-    image: '/assets/news/placeholder-news-2.webp',
+    image: '/assets/news/komuna-tuzit.jpg',
     excerpt:
       'A conversation about translation, language, and the public life of poetry.',
     body: '',
@@ -152,10 +168,10 @@ export const newsArticles = [
   {
     id: 3,
     slug: 'award-recognition-announced',
-    title: 'Award Recognition Announced',
+    title: 'Poeti Lulzim Tafa pjesë e ekspozitës ndërkombëtare poetike “Shi Xu” në Shangai të Kinës',
     category: 'Award',
     date: '2026-02-22',
-    image: '/assets/news/placeholder-news-3.webp',
+    image: '/assets/news/Lajmi_Kine_LulzimTafa.jpg',
     excerpt:
       'A new recognition celebrates a long contribution to literature and academic culture.',
     body:

@@ -1,17 +1,31 @@
 import { Link } from 'react-router-dom';
 
+const newsImageAssets = import.meta.glob('../assets/news/*', { eager: true, query: '?url', import: 'default' });
+
+function getNewsImage(path) {
+  if (!path) return null;
+  const filename = path.split('/').pop();
+  return Object.entries(newsImageAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+}
+
 export default function NewsCard({ item }) {
+  const image = getNewsImage(item.image);
+  const date = new Date(item.date);
+
   const content = (
     <>
-      <div className="news-image" aria-hidden="true">
-        <span>{item.category}</span>
+      <div className="news-image">
+        {image ? <img src={image} alt="" /> : <span>{item.category}</span>}
       </div>
       <div className="news-content">
-        <time>{new Date(item.date).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</time>
+        <time dateTime={item.date}>
+          <strong>{date.getDate()}</strong>
+          <span>{date.toLocaleDateString('en', { month: 'short' })}</span>
+        </time>
         <p className="eyebrow">{item.category}</p>
         <h3>{item.title}</h3>
         <p>{item.excerpt}</p>
-        <span className="text-link">Read More</span>
+        <span className="text-link">Read More <span aria-hidden="true">→</span></span>
       </div>
     </>
   );
