@@ -28,7 +28,7 @@ export default function Home() {
       const rect = section.getBoundingClientRect();
       const viewportHeight = window.innerHeight || 1;
       const progress = Math.min(1, Math.max(0, (viewportHeight - rect.top) / (viewportHeight + rect.height)));
-      const offset = (progress - 0.5) * 220;
+      const offset = (progress - 0.5) * 120;
       section.style.setProperty('--quote-parallax-y', `${offset}px`);
       frame = 0;
     };
