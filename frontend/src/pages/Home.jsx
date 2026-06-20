@@ -26,10 +26,12 @@ export default function Home() {
 
     const updateParallax = () => {
       const rect = section.getBoundingClientRect();
-      const viewportHeight = window.innerHeight || 1;
-      const progress = Math.min(1, Math.max(0, (viewportHeight - rect.top) / (viewportHeight + rect.height)));
-      const offset = (progress - 0.5) * 120;
-      section.style.setProperty('--quote-parallax-y', `${offset}px`);
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+      const viewportCenter = viewportHeight / 2;
+      const sectionCenter = rect.top + rect.height / 2;
+      const distanceFromCenter = sectionCenter - viewportCenter;
+      const offset = Math.max(-120, Math.min(120, distanceFromCenter * -0.18));
+      section.style.setProperty('--quote-bg-y', `${offset}px`);
       frame = 0;
     };
 
