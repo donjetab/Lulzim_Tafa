@@ -61,6 +61,7 @@ export default function Layout() {
     <div className="site-shell">
       <header className="site-header">
         <NavLink to="/" className="brand" aria-label="Lulzim Tafa home">
+          
           <span>{siteSettings.logo}</span>
           <small>{siteSettings.subtitle}</small>
         </NavLink>
