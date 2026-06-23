@@ -6,6 +6,15 @@ import { books, newsArticles, poems } from '../data/content.js';
 
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 
+const homeFeaturedBookSlugs = ['antologji-personale', 'ekspozite-me-enderra', 'rivali-i-adamit', 'flirt'];
+
+const homeBookMockups = {
+  'antologji-personale': '/assets/mockups/hp-antologji-personale.png',
+  'ekspozite-me-enderra': '/assets/mockups/hp-ekspozite-me-enderra.png',
+  'rivali-i-adamit': '/assets/mockups/hp-rivali-adamit.png',
+  flirt: '/assets/mockups/hp-flirt.png',
+};
+
 function getBookMockup(path) {
   if (!path) return null;
   const filename = path.split('/').pop();
@@ -14,7 +23,9 @@ function getBookMockup(path) {
 
 export default function Home() {
   const quoteRef = useRef(null);
-  const featuredBooks = books.slice(0, 4);
+  const featuredBooks = homeFeaturedBookSlugs
+    .map((slug) => books.find((book) => book.slug === slug))
+    .filter(Boolean);
   const featuredPoem = poems.find((poem) => poem.featured);
   const featuredNews = newsArticles.filter((item) => item.featured).slice(0, 3);
 
@@ -76,8 +87,8 @@ export default function Home() {
           <div className="home-book-row">
             {featuredBooks.map((book, index) => (
               <Link className={`home-book-mockup book-tone-${index + 1}`} key={book.id} to={`/books/${book.slug}`}>
-                {getBookMockup(book.mockupImage) ? (
-                  <img className="home-book-image" src={getBookMockup(book.mockupImage)} alt={`${book.title} book mockup`} />
+                {getBookMockup(homeBookMockups[book.slug]) ? (
+                  <img className="home-book-image" src={getBookMockup(homeBookMockups[book.slug])} alt={`${book.title} book mockup`} />
                 ) : (
                   <span>{book.title}</span>
                 )}

@@ -57,6 +57,10 @@ function SocialIcon({ type }) {
 }
 
 export default function Layout() {
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -117,8 +121,11 @@ export default function Layout() {
             ))}
           </div>
         </div>
-        <p className="footer-credit">© 2026 LULZIM TAFA — Administered by Ardian Salinuka</p>
+        <p className="footer-credit">© 2026 LULZIM TAFA — Administered by Ardian Sallauka</p>
       </footer>
+      <button className="back-to-top" type="button" aria-label="Back to top" onClick={scrollToTop}>
+        <span aria-hidden="true" />
+      </button>
     </div>
   );
 }
