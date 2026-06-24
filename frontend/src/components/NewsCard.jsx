@@ -11,6 +11,7 @@ function getNewsImage(path) {
 export default function NewsCard({ item }) {
   const image = getNewsImage(item.image);
   const date = new Date(item.date);
+  const label = item.isExternal ? 'Open Link' : 'Read More';
 
   const content = (
     <>
@@ -25,7 +26,7 @@ export default function NewsCard({ item }) {
         <p className="eyebrow">{item.category}</p>
         <h3>{item.title}</h3>
         <p>{item.excerpt}</p>
-        <span className="text-link">Read More <span aria-hidden="true">→</span></span>
+        <span className="text-link">{label} <span aria-hidden="true">→</span></span>
       </div>
     </>
   );

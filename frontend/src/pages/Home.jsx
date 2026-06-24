@@ -86,13 +86,13 @@ export default function Home() {
           />
           <div className="home-book-row">
             {featuredBooks.map((book, index) => (
-              <Link className={`home-book-mockup book-tone-${index + 1}`} key={book.id} to={`/books/${book.slug}`}>
+              <div className={`home-book-mockup book-tone-${index + 1}`} key={book.id}>
                 {getBookMockup(homeBookMockups[book.slug]) ? (
                   <img className="home-book-image" src={getBookMockup(homeBookMockups[book.slug])} alt={`${book.title} book mockup`} />
                 ) : (
                   <span>{book.title}</span>
                 )}
-              </Link>
+              </div>
             ))}
           </div>
           <Link className="button-secondary centered-button" to="/books">View All Books</Link>

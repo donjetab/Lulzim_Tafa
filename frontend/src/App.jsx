@@ -1,9 +1,8 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
 import Books from './pages/Books.jsx';
-import BookDetails from './pages/BookDetails.jsx';
 import Poetry from './pages/Poetry.jsx';
 import PoetryDetails from './pages/PoetryDetails.jsx';
 import News from './pages/News.jsx';
@@ -19,7 +18,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/books" element={<Books />} />
-        <Route path="/books/:slug" element={<BookDetails />} />
+        <Route path="/books/:slug" element={<Navigate to="/books" replace />} />
         <Route path="/poetry" element={<Poetry />} />
         <Route path="/poetry/:slug" element={<PoetryDetails />} />
         <Route path="/news" element={<News />} />

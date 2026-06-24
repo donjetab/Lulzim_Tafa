@@ -33,6 +33,17 @@ function sortBooksByYear(bookList) {
   });
 }
 
+function getPreviewTitleStyle(title) {
+  const words = title.trim().split(/\s+/);
+  const longestWord = Math.max(...words.map((word) => word.length));
+  const titleLength = title.length;
+  const maxSize = Math.max(2.45, Math.min(3.9, 4.35 - Math.max(0, longestWord - 8) * 0.22 - Math.max(0, titleLength - 20) * 0.035));
+
+  return {
+    '--preview-title-max': `${maxSize.toFixed(2)}rem`,
+  };
+}
+
 export default function Books() {
   const bookRefs = useRef({});
   const listedBooks = useMemo(() => sortBooksByYear(books), []);
@@ -65,7 +76,7 @@ export default function Books() {
     window.setTimeout(() => {
       setActiveBook(null);
       setIsClosing(false);
-    }, 1800);
+    }, 950);
   }
 
   return (
@@ -119,7 +130,7 @@ export default function Books() {
                 <div className="shelf-inside-pages">
                   <div className="shelf-inside-page shelf-inside-page-left">
                     <p className="eyebrow">{activeBook.year || 'Year to confirm'}</p>
-                    <h2>{activeBook.title}</h2>
+                    <h2 style={getPreviewTitleStyle(activeBook.title)}>{activeBook.title}</h2>
                     <p>{activeBook.location || activeBook.category}</p>
                   </div>
                   <div className="shelf-inside-page shelf-inside-page-right">
