@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   aboutIntroParagraphs,
   biography,
@@ -86,6 +87,7 @@ export default function About() {
   }
 
   const activePair = testimonialPairs[testimonialPage];
+  const hasManyTestimonialPages = testimonialPairs.length > 1;
   const activeGalleryImage = activeGalleryIndex === null
     ? null
     : {
@@ -140,7 +142,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="about-life-section">
+      <section className="about-life-section" id="biography">
         <article className="about-life-copy">
           <h2>Lulzim Tafa's Life</h2>
           {biography.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
@@ -164,13 +166,60 @@ export default function About() {
         </aside>
       </section>
 
+      <section className="testimonial-section" id="testimonials">
+        <div className="testimonial-heading">
+          <p className="eyebrow">Testimonials & Recognition</p>
+          <h2>Others About Lulzim Tafa</h2>
+          <p>Reflections from colleagues, readers, scholars, and public voices who have been inspired by his work and presence.</p>
+        </div>
+
+        <div className="testimonial-reader">
+          <button className="book-arrow book-arrow-left" type="button" onClick={() => turnPage(-1)} aria-label="Previous testimonials" disabled={!hasManyTestimonialPages}>
+            <span aria-hidden="true" />
+          </button>
+          <div className="testimonial-book">
+            {activePair.map((item, index) => (
+              <blockquote className={index === 1 ? 'book-page book-page-right' : 'book-page'} key={`${testimonialPage}-${item.id}`}>
+                <span className="quote-mark" aria-hidden="true">"</span>
+                <p>{item.quote}</p>
+                <Link className="testimonial-inline-read" to={`/testimonials#testimonial-${item.id}`}>Read all</Link>
+                <cite>
+                  <strong>{item.authorName}</strong>
+                  <small>{item.authorTitle}</small>
+                </cite>
+              </blockquote>
+            ))}
+          </div>
+          <button className="book-arrow book-arrow-right" type="button" onClick={() => turnPage(1)} aria-label="Next testimonials" disabled={!hasManyTestimonialPages}>
+            <span aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="testimonial-book-dots" aria-label="Testimonial pages">
+          {testimonialPairs.map((_, index) => (
+            <button
+              className={index === testimonialPage ? 'testimonial-book-dot is-active' : 'testimonial-book-dot'}
+              type="button"
+              onClick={() => setTestimonialPage(index)}
+              aria-label={`Go to testimonial page ${index + 1}`}
+              aria-current={index === testimonialPage ? 'page' : undefined}
+              key={`testimonial-page-${index}`}
+            />
+          ))}
+        </div>
+
+        <Link className="button-secondary testimonial-read-all" to="/testimonials">
+          Read All Testimonials
+        </Link>
+      </section>
+
       <section className="about-gallery-section">
         <div className="about-section-title">
           <div>
             <p className="eyebrow">Moments and Public Life</p>
             <h2>Gallery Preview</h2>
           </div>
-          <a className="button-secondary" href="/about#gallery">See All Gallery</a>
+          <a className="button-secondary" href="/gallery">See All Gallery</a>
         </div>
         <div className="about-gallery-grid" id="gallery">
           {galleryImages.map((image, index) => (
@@ -199,38 +248,7 @@ export default function About() {
         </div>
       )}
 
-      <section className="testimonial-section">
-        <div className="testimonial-heading">
-          <p className="eyebrow">Testimonials & Recognition</p>
-          <h2>Others About Lulzim Tafa</h2>
-          <p>Reflections from colleagues, readers, scholars, and public voices who have been inspired by his work and presence.</p>
-        </div>
 
-        <div className="testimonial-reader">
-          <button className="book-arrow book-arrow-left" type="button" onClick={() => turnPage(-1)} aria-label="Previous testimonials">
-            <span aria-hidden="true" />
-          </button>
-          <div className="testimonial-book">
-            {activePair.map((item, index) => (
-              <blockquote className={index === 1 ? 'book-page book-page-right' : 'book-page'} key={`${testimonialPage}-${item.id}`}>
-                <span className="quote-mark" aria-hidden="true">"</span>
-                <p>{item.quote}</p>
-                <cite>
-                  <strong>{item.authorName}</strong>
-                  <small>{item.authorTitle}</small>
-                </cite>
-              </blockquote>
-            ))}
-          </div>
-          <button className="book-arrow book-arrow-right" type="button" onClick={() => turnPage(1)} aria-label="Next testimonials">
-            <span aria-hidden="true" />
-          </button>
-        </div>
-
-        <button className="button-secondary testimonial-read-all" type="button" onClick={() => turnPage(1)}>
-          Read All
-        </button>
-      </section>
     </main>
   );
 }

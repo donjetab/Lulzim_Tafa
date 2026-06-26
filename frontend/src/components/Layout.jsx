@@ -1,12 +1,23 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import headerLogo from '../assets/logo/logo-landscape-white_gold.png';
 import { siteSettings } from '../data/content.js';
 
 const navItems = [
   ['Home', '/'],
-  ['About', '/about'],
+  ['About', '/about', [
+    ['Biography', '/about#biography'],
+    ['Others About LT', '/about#testimonials'],
+    ['Gallery', '/gallery'],
+  ]],
   ['Books', '/books'],
-  ['Poetry', '/poetry'],
+  ['Poetry', '/poetry', [
+    ['Written Poetry', '/poetry'],
+    ['Video Poetry', '/poetry?view=video'],
+  ]],
+  ['Poetry House', '/poetry-house'],
   ['News & Interviews', '/news'],
+  ['Gallery', '/gallery'],
   ['Awards', '/awards'],
 ];
 
@@ -20,8 +31,48 @@ const footerNavigation = [
 const footerWork = [
   ['Books', '/books'],
   ['Poetry', '/poetry'],
+  ['Poetry House', '/poetry-house'],
+  ['Gallery', '/gallery'],
   ['Awards', '/awards'],
 ];
+
+const revealSelectors = [
+  '.about-life-section',
+  '.about-gallery-section',
+  '.testimonial-section',
+  '.section-heading',
+  '.bookshelf',
+  '.books-list-section',
+  '.book-card',
+  '.shelf-book',
+  '.poetry-view-tabs',
+  '.poetry-language-filter',
+  '.poetry-paper-card',
+  '.poetry-paper-card-wide',
+  '.poetry-video-section',
+  '.poetry-video-card',
+  '.poetry-house-feature',
+  '.poetry-house-gallery-section',
+  '.poetry-house-carousel',
+  '.poetry-house-news',
+  '.news-filter',
+  '.news-card',
+  '.news-pagination',
+  '.news-detail',
+  '.news-detail-image',
+  '.news-detail-body',
+  '.news-sources',
+  '.news-source-card',
+  '.news-gallery button',
+  '.gallery-masonry-card',
+  '.gallery-load-more',
+  '.award-card',
+  '.award-detail-copy',
+  '.award-detail-image',
+  '.testimonial-full-card',
+  '.testimonials-toolbar',
+  '.contact-layout',
+].join(',');
 
 function SocialIcon({ type }) {
   const icons = {
@@ -57,6 +108,78 @@ function SocialIcon({ type }) {
 }
 
 export default function Layout() {
+  const location = useLocation();
+  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const isVideoPoetry = location.pathname === '/poetry' && location.search === '?view=video';
+  const isWrittenPoetry = location.pathname === '/poetry' && !isVideoPoetry;
+
+  useEffect(() => {
+    const main = document.querySelector('.site-shell > main');
+    if (!main) return undefined;
+
+    const elements = [...main.querySelectorAll(revealSelectors)].filter((element, index, list) => (
+      !element.closest('[data-home-animate]')
+      && !element.closest('.gallery-lightbox')
+      && !element.closest('.news-photo-preview')
+      && list.findIndex((candidate) => candidate === element) === index
+    ));
+
+    if (!elements.length) return undefined;
+
+    elements.forEach((element, index) => {
+      element.classList.add('scroll-reveal-item');
+      element.style.setProperty('--reveal-index', index % 6);
+    });
+
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((element) => element.classList.add('is-revealed'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      rootMargin: '0px 0px -10% 0px',
+      threshold: 0.12,
+    });
+
+    const frame = window.requestAnimationFrame(() => {
+      elements.forEach((element) => observer.observe(element));
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      elements.forEach((element) => {
+        element.classList.remove('scroll-reveal-item', 'is-revealed');
+        element.style.removeProperty('--reveal-index');
+      });
+    };
+  }, [location.pathname, location.search]);
+
+  function getSubmenuClass(itemTo) {
+    if (itemTo === '/poetry') return isWrittenPoetry ? 'active' : undefined;
+    if (itemTo === '/poetry?view=video') return isVideoPoetry ? 'active' : undefined;
+    if (itemTo === '/about#biography') {
+      return location.pathname === '/about' && location.hash === '#biography' ? 'active' : undefined;
+    }
+    if (itemTo === '/about#testimonials') {
+      return location.pathname === '/about' && location.hash === '#testimonials' ? 'active' : undefined;
+    }
+    if (itemTo === '/gallery') return location.pathname === '/gallery' ? 'active' : undefined;
+    return undefined;
+  }
+
+  function closeSubmenu() {
+    setOpenSubmenu(null);
+    document.activeElement?.blur?.();
+  }
+
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -65,15 +188,34 @@ export default function Layout() {
     <div className="site-shell">
       <header className="site-header">
         <NavLink to="/" className="brand" aria-label="Lulzim Tafa home">
-          
-          <span>{siteSettings.logo}</span>
-          <small>{siteSettings.subtitle}</small>
+          <img src={headerLogo} alt="Lulzim Tafa" />
         </NavLink>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map(([label, to]) => (
-            <NavLink key={to} to={to} end={to === '/'}>
-              {label}
-            </NavLink>
+          {navItems.map(([label, to, submenu]) => (
+            submenu ? (
+              <div
+                className={openSubmenu === to ? 'nav-item-with-submenu nav-submenu-open' : 'nav-item-with-submenu'}
+                key={to}
+                onMouseEnter={() => setOpenSubmenu(to)}
+                onMouseLeave={() => setOpenSubmenu(null)}
+                onFocus={() => setOpenSubmenu(to)}
+              >
+                <NavLink to={to} onClick={closeSubmenu}>
+                  {label}
+                </NavLink>
+                <div className="nav-submenu" aria-label={`${label} sections`}>
+                  {submenu.map(([submenuLabel, submenuTo]) => (
+                    <NavLink className={() => getSubmenuClass(submenuTo)} to={submenuTo} end={submenuTo === '/poetry'} onClick={closeSubmenu} key={submenuTo}>
+                      {submenuLabel}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <NavLink key={to} to={to} end={to === '/'}>
+                {label}
+              </NavLink>
+            )
           ))}
         </nav>
       </header>
@@ -82,8 +224,7 @@ export default function Layout() {
       </main>
       <footer className="site-footer">
         <div className="footer-brand">
-          <h2>{siteSettings.logo}</h2>
-          <p>{siteSettings.subtitle}</p>
+          <img src={headerLogo} alt="Lulzim Tafa" />
           <small>A homepage designed to reflect books, scholarship, and an unmistakably academic public profile.</small>
         </div>
         <nav aria-label="Footer navigation">

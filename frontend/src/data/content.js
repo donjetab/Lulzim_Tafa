@@ -1,4 +1,8 @@
 import { importedPoems } from './importedPoems.js';
+import { newsArticles } from './news.js';
+import { testimonials as importedTestimonials } from './testimonials.js';
+
+export { newsArticles };
 
 export const siteSettings = {
   logo: 'Lulzim Tafa',
@@ -818,7 +822,7 @@ Lidhjet e zemrave`,
   ...importedPoems,
 ];
 
-export const newsArticles = [
+const legacyNewsArticles = [
   {
     id: 1,
     slug: 'poeti-lulzim-tafa-nderohet-at-gjergj-fishta',
@@ -893,39 +897,102 @@ export const newsArticles = [
 export const awards = [
   {
     id: 1,
-    title: 'Lifetime Literary Contribution',
-    description: 'Recognition for sustained contribution to contemporary poetry.',
-    year: 2025,
-    featured: true,
-    icon: '/assets/awards/placeholder-medal.webp',
-    certificateAsset: '/assets/awards/placeholder-certificate.webp',
+    slug: 'officer-french-order-arts-letters',
+    title: 'Officer in the French Order of Arts & Letters',
+    description: 'Officer in the French Order of Arts & Letters, awarded in Kosovo.',
+    year: 2023,
+    location: 'Kosovo',
+    icon: '/assets/decorative/award-icon-5.png',
+    image: '/assets/awards/officer-in-the-french-order-of-arts.jpg',
+    layout: 'landscape',
   },
   {
     id: 2,
-    title: 'Academic Leadership Honor',
-    description: 'Awarded for cultural and educational leadership.',
-    year: 2022,
-    featured: true,
-    icon: '/assets/awards/placeholder-seal.webp',
-    certificateAsset: '/assets/awards/placeholder-certificate.webp',
+    slug: 'alexander-the-great-award',
+    title: 'International Award "Alexander the Great"',
+    description: 'International literary distinction awarded in Greece.',
+    year: 2021,
+    location: 'Greece',
+    icon: '/assets/decorative/award-icon-6.png',
+    image: '/assets/awards/alexander-the-great.jpg',
+    layout: 'landscape',
   },
   {
     id: 3,
-    title: 'International Poetry Distinction',
-    description: 'An international acknowledgement of poetic work in translation.',
-    year: 2020,
-    featured: true,
-    icon: '/assets/awards/placeholder-laurel.webp',
-    certificateAsset: '/assets/awards/placeholder-certificate.webp',
+    slug: 'neruda-awards',
+    title: 'International Award "Neruda Awards"',
+    description: 'International poetry award presented in Italy.',
+    year: 2019,
+    location: 'Italy',
+    icon: '/assets/decorative/award-icon-3.png',
+    image: '/assets/awards/neruda-awards.jpg',
+    layout: 'landscape',
   },
   {
     id: 4,
-    title: 'Cultural Visit Acknowledgment',
-    description: 'Recognition following a regional cultural exchange program.',
+    slug: 'naji-naaman-award',
+    title: 'International Award "Naji Naaman"',
+    description: 'International literary award presented in Lebanon.',
+    year: 2019,
+    location: 'Lebanon',
+    icon: '/assets/decorative/award-icon-2.png',
+    image: '/assets/awards/naji-naaman.jpg',
+    layout: 'landscape',
+  },
+  {
+    id: 5,
+    slug: 'kosovo-presidential-medal-merit',
+    title: 'Kosovo Presidential Medal of Merit',
+    description: 'Presidential Medal of Merit awarded by the Republic of Kosovo.',
     year: 2018,
-    featured: false,
-    icon: '/assets/awards/placeholder-seal.webp',
-    certificateAsset: '/assets/awards/placeholder-certificate.webp',
+    location: 'Kosovo',
+    icon: '/assets/decorative/award-icon-4.png',
+    image: '/assets/awards/kosovo-presidental-medal.jpg',
+    layout: 'landscape',
+  },
+  {
+    id: 6,
+    slug: 'mihai-eminescu-award',
+    title: 'International Award "Mihai Eminescu"',
+    description: 'International literary award presented in Romania.',
+    year: 2018,
+    location: 'Romania',
+    icon: '/assets/decorative/award-icon-1.png',
+    image: '/assets/awards/mihai-eminescu.jpg',
+    layout: 'landscape',
+  },
+  {
+    id: 7,
+    slug: 'radovan-zogovic-award',
+    title: 'International Award "Radovan Zogovic"',
+    description: 'International literary award presented in Montenegro.',
+    year: 2016,
+    location: 'Montenegro',
+    icon: '/assets/decorative/award-icon-3.png',
+    image: '/assets/awards/radovan-zogovic.jpg',
+    layout: 'portrait',
+  },
+  {
+    id: 8,
+    slug: 'ramadan-sinani-award',
+    title: '"Ramadan Sinani" Award',
+    description: 'Literary award presented in Tetovo, North Macedonia.',
+    year: 2015,
+    location: 'Tetovo, North Macedonia',
+    icon: '/assets/decorative/award-icon-2.png',
+    image: '/assets/awards/ramadan-sinani.jpg',
+    layout: 'portrait',
+  },
+  {
+    id: 9,
+    slug: 'order-saint-yuri-victorious',
+    title: '"Order of Saint Yuri the Victorious"',
+    description: 'Highest decoration bestowed by the Patriarch of Ukraine, Patriarch Filaret.',
+    year: 2022,
+    location: 'Ukraine',
+    icon: '/assets/decorative/award-icon-6.png',
+    image: '/assets/awards/The_Decoration_from_the_Patriarch_Filaret_of_Ukraine.webp',
+    layout: 'portrait',
   },
 ];
 
@@ -937,36 +1004,7 @@ export const galleryImages = [
   { id: 5, caption: 'Literary exchange' },
 ];
 
-export const testimonials = [
-  {
-    id: 1,
-    quote:
-      'Lulzim Tafa is a scholar whose writings open the mind and heart. His work brings clarity to complex questions and strengthens our shared search for understanding and human dignity.',
-    authorName: 'Prof. Iliriana Fiqollahu',
-    authorTitle: 'University Professor of Literature',
-  },
-  {
-    id: 2,
-    quote:
-      'His poetry speaks in the quiet of things we all carry. Lulzim Tafa\'s words stay with you - they open the heart and widen the mind.',
-    authorName: 'Arben Dreshaj',
-    authorTitle: 'Poet & Essayist',
-  },
-  {
-    id: 3,
-    quote:
-      'His academic voice is measured, humane, and courageous. It carries the discipline of law together with the moral imagination of literature.',
-    authorName: 'Dr. Besa Krasniqi',
-    authorTitle: 'Legal Scholar',
-  },
-  {
-    id: 4,
-    quote:
-      'In public life and in poetry, Tafa keeps returning to the same essential themes: freedom, dignity, memory, and the responsibility of words.',
-    authorName: 'Mentor Shala',
-    authorTitle: 'Cultural Critic',
-  },
-];
+export const testimonials = importedTestimonials;
 
 export const biography = [
   'He has established five international awards in various fields, including the international award for literature and arts "Ali Podrimja". He is also committed to creating facilities for students with special needs and members of minority communities. He is also the co-founder of the British School of Kosova, which is the largest non-public school in Kosova, as well as of ATV television, one of the main media houses in the country. In 2014, he was chosen manager of the year in the field of education by Euromanager Magazine and the Union of European Managers and bestowed by the French State for outstanding achievements in the fields of Art and Literature.',

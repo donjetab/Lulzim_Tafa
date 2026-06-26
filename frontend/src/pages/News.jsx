@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
 import PageHero from '../components/PageHero.jsx';
 import { newsArticles } from '../data/content.js';
@@ -7,22 +8,33 @@ const NEWS_PER_PAGE = 9;
 const filters = ['All', 'News', 'Interview'];
 
 export default function News() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const sortedNews = useMemo(
-    () => [...newsArticles].sort((a, b) => new Date(b.date) - new Date(a.date)),
+    () => newsArticles
+      .filter((item) => !item.hiddenFromList)
+      .sort((a, b) => new Date(b.date) - new Date(a.date)),
     [],
   );
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [page, setPage] = useState(1);
+  const filterParam = searchParams.get('filter');
+  const activeFilter = filters.includes(filterParam) ? filterParam : 'All';
   const filteredNews = activeFilter === 'All'
     ? sortedNews
     : sortedNews.filter((item) => item.category === activeFilter);
   const pageCount = Math.ceil(filteredNews.length / NEWS_PER_PAGE);
+  const requestedPage = Number(searchParams.get('page')) || 1;
+  const page = Math.min(Math.max(requestedPage, 1), pageCount || 1);
   const firstIndex = (page - 1) * NEWS_PER_PAGE;
   const visibleNews = filteredNews.slice(firstIndex, firstIndex + NEWS_PER_PAGE);
 
+  function updateListParams(nextFilter, nextPage) {
+    const params = new URLSearchParams();
+    if (nextFilter !== 'All') params.set('filter', nextFilter);
+    if (nextPage > 1) params.set('page', String(nextPage));
+    setSearchParams(params);
+  }
+
   function changeFilter(filter) {
-    setActiveFilter(filter);
-    setPage(1);
+    updateListParams(filter, 1);
   }
 
   return (
@@ -59,7 +71,7 @@ export default function News() {
                   className={pageNumber === page ? 'is-active' : ''}
                   key={pageNumber}
                   type="button"
-                  onClick={() => setPage(pageNumber)}
+                  onClick={() => updateListParams(activeFilter, pageNumber)}
                   aria-label={`Show news page ${pageNumber}`}
                   aria-current={pageNumber === page ? 'page' : undefined}
                 >
