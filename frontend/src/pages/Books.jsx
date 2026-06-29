@@ -47,7 +47,7 @@ function getPreviewTitleStyle(title) {
 export default function Books() {
   const bookRefs = useRef({});
   const listedBooks = useMemo(() => sortBooksByYear(books), []);
-  const shelfBooks = listedBooks.slice(0, 6);
+  const shelfBooks = listedBooks.slice(0, 10);
   const [activeBook, setActiveBook] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);

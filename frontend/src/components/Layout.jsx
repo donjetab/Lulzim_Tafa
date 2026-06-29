@@ -41,7 +41,6 @@ const revealSelectors = [
   '.about-gallery-section',
   '.testimonial-section',
   '.section-heading',
-  '.bookshelf',
   '.books-list-section',
   '.book-card',
   '.shelf-book',
