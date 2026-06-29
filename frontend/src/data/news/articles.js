@@ -1182,7 +1182,6 @@
     galleryImages: [],
     featured: false,
   },
-  ,
   {
     id: 84,
     slug: 'epoka-e-re-interviste-me-poetin-lulzim-tafa',
@@ -1193,7 +1192,7 @@
     excerpt: 'Lulzim Tafa është një nga poetët më të përkthyer të poezisë shqipe në botë. Autor i disa librave me poezi, shumica prej tyre të përkthyera e të botuara në gjuhët më të mëdha të botës. Është doktor i shkencave juridike, profesor universiteti. Tafa është edhe afarist.',
     body: [],
     isExternal: true,
-    externalUrl: '',
+    externalUrl: 'https://www.epokaere.com/interviste-me-poetin-lulzim-tafa/',
     sourceUrl: 'https://www.epokaere.com/interviste-me-poetin-lulzim-tafa/',
     galleryImages: [],
     featured: false,

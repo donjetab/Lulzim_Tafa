@@ -16,7 +16,7 @@ export default function Contact() {
       <section className="section contact-layout">
         <div className="contact-cards">
           <article><h3>Email</h3><p>{siteSettings.contactEmail}</p></article>
-          <article><h3>Phone</h3><p>{siteSettings.contactPhone}</p></article>
+          {siteSettings.contactPhone && <article><h3>Phone</h3><p>{siteSettings.contactPhone}</p></article>}
           <article><h3>Location</h3><p>{siteSettings.location}</p></article>
         </div>
         <form className="contact-form" onSubmit={handleSubmit}>

@@ -10,14 +10,13 @@ export const siteSettings = {
   heroTitle: 'Poetry, scholarship, and the enduring language of memory',
   heroText:
     'A warm editorial home for the literary work, public life, awards, interviews, and academic journey of Lulzim Tafa.',
-  contactEmail: 'info@lulzimtafa.com',
-  contactPhone: '+383 00 000 000',
+  contactEmail: 'lulzim.tafa@aab-edu.net',
   location: 'Prishtina, Kosovo',
   socialLinks: [
-    { id: 1, label: 'Lulzim Tafa', icon: 'website', url: '#' },
-    { id: 2, label: 'lulzim.tafa', icon: 'facebook', url: '#' },
-    { id: 3, label: 'lulzimtafa.official', icon: 'instagram', url: '#' },
-    { id: 4, label: 'Lulzim Tafa', icon: 'linkedin', url: '#' },
+    { id: 1, label: 'Lulzim Tafa', icon: 'website', url: 'https://en.wikipedia.org/wiki/Lulzim_Tafa' },
+    { id: 2, label: 'lulzim.tafa', icon: 'facebook', url: 'https://www.facebook.com/lulzim.tafa/' },
+    { id: 3, label: 'lulzimtafa.official', icon: 'instagram', url: 'https://www.instagram.com/lulzimtafa.official/' },
+    { id: 4, label: 'Lulzim Tafa', icon: 'linkedin', url: 'https://linkedin.com/in/lulzim-tafa-a5b4362b7' },
   ],
 };
 

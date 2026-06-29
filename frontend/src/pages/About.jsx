@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   aboutIntroParagraphs,
@@ -79,15 +79,25 @@ function QuickFactIcon({ type }) {
 
 export default function About() {
   const [testimonialPage, setTestimonialPage] = useState(0);
+  const [isCompactTestimonials, setIsCompactTestimonials] = useState(false);
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(null);
-  const testimonialPairs = [];
+  const testimonialsPerPage = isCompactTestimonials ? 1 : 2;
+  const testimonialPages = [];
 
-  for (let index = 0; index < testimonials.length; index += 2) {
-    testimonialPairs.push(testimonials.slice(index, index + 2));
+  for (let index = 0; index < testimonials.length; index += testimonialsPerPage) {
+    testimonialPages.push(testimonials.slice(index, index + testimonialsPerPage));
   }
 
-  const activePair = testimonialPairs[testimonialPage];
-  const hasManyTestimonialPages = testimonialPairs.length > 1;
+  const activePair = testimonialPages[testimonialPage] ?? testimonialPages[0] ?? [];
+  const hasManyTestimonialPages = testimonialPages.length > 1;
+  const visibleTestimonialDots = testimonialPages
+    .map((_, index) => index)
+    .filter((index) => (
+      !isCompactTestimonials
+      || index === 0
+      || index === testimonialPages.length - 1
+      || Math.abs(index - testimonialPage) <= 2
+    ));
   const activeGalleryImage = activeGalleryIndex === null
     ? null
     : {
@@ -95,15 +105,29 @@ export default function About() {
       src: galleryAssets[activeGalleryIndex],
     };
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 560px)');
+    const syncCompactMode = () => setIsCompactTestimonials(mediaQuery.matches);
+
+    syncCompactMode();
+    mediaQuery.addEventListener('change', syncCompactMode);
+
+    return () => mediaQuery.removeEventListener('change', syncCompactMode);
+  }, []);
+
+  useEffect(() => {
+    setTestimonialPage((currentPage) => Math.min(currentPage, Math.max(testimonialPages.length - 1, 0)));
+  }, [testimonialPages.length]);
+
   function turnPage(direction) {
     setTestimonialPage((currentPage) => {
       const nextPage = currentPage + direction;
 
       if (nextPage < 0) {
-        return testimonialPairs.length - 1;
+        return testimonialPages.length - 1;
       }
 
-      if (nextPage >= testimonialPairs.length) {
+      if (nextPage >= testimonialPages.length) {
         return 0;
       }
 
@@ -196,7 +220,7 @@ export default function About() {
         </div>
 
         <div className="testimonial-book-dots" aria-label="Testimonial pages">
-          {testimonialPairs.map((_, index) => (
+          {visibleTestimonialDots.map((index) => (
             <button
               className={index === testimonialPage ? 'testimonial-book-dot is-active' : 'testimonial-book-dot'}
               type="button"
@@ -206,6 +230,9 @@ export default function About() {
               key={`testimonial-page-${index}`}
             />
           ))}
+          {isCompactTestimonials && (
+            <span className="testimonial-page-count">{testimonialPage + 1} / {testimonialPages.length}</span>
+          )}
         </div>
 
         <Link className="button-secondary testimonial-read-all" to="/testimonials">

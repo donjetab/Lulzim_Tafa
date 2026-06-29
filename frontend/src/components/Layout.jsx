@@ -26,13 +26,13 @@ const footerNavigation = [
   ['About', '/about'],
   ['Interviews', '/news'],
   ['News', '/news'],
+  ['Gallery', '/gallery'],
 ];
 
 const footerWork = [
   ['Books', '/books'],
   ['Poetry', '/poetry'],
   ['Poetry House', '/poetry-house'],
-  ['Gallery', '/gallery'],
   ['Awards', '/awards'],
 ];
 
@@ -110,6 +110,7 @@ function SocialIcon({ type }) {
 export default function Layout() {
   const location = useLocation();
   const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isVideoPoetry = location.pathname === '/poetry' && location.search === '?view=video';
   const isWrittenPoetry = location.pathname === '/poetry' && !isVideoPoetry;
 
@@ -162,6 +163,11 @@ export default function Layout() {
     };
   }, [location.pathname, location.search]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setOpenSubmenu(null);
+  }, [location.pathname, location.search, location.hash]);
+
   function getSubmenuClass(itemTo) {
     if (itemTo === '/poetry') return isWrittenPoetry ? 'active' : undefined;
     if (itemTo === '/poetry?view=video') return isVideoPoetry ? 'active' : undefined;
@@ -180,6 +186,12 @@ export default function Layout() {
     document.activeElement?.blur?.();
   }
 
+  function closeNavigation() {
+    setOpenSubmenu(null);
+    setMobileMenuOpen(false);
+    document.activeElement?.blur?.();
+  }
+
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -190,7 +202,17 @@ export default function Layout() {
         <NavLink to="/" className="brand" aria-label="Lulzim Tafa home">
           <img src={headerLogo} alt="Lulzim Tafa" />
         </NavLink>
-        <nav className="main-nav" aria-label="Main navigation">
+        <button
+          className="mobile-nav-toggle"
+          type="button"
+          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="main-navigation"
+          onClick={() => setMobileMenuOpen((isOpen) => !isOpen)}
+        >
+          <span aria-hidden="true" />
+        </button>
+        <nav id="main-navigation" className={mobileMenuOpen ? 'main-nav is-open' : 'main-nav'} aria-label="Main navigation">
           {navItems.map(([label, to, submenu]) => (
             submenu ? (
               <div
@@ -200,19 +222,19 @@ export default function Layout() {
                 onMouseLeave={() => setOpenSubmenu(null)}
                 onFocus={() => setOpenSubmenu(to)}
               >
-                <NavLink to={to} onClick={closeSubmenu}>
+                <NavLink to={to} onClick={closeNavigation}>
                   {label}
                 </NavLink>
                 <div className="nav-submenu" aria-label={`${label} sections`}>
                   {submenu.map(([submenuLabel, submenuTo]) => (
-                    <NavLink className={() => getSubmenuClass(submenuTo)} to={submenuTo} end={submenuTo === '/poetry'} onClick={closeSubmenu} key={submenuTo}>
+                    <NavLink className={() => getSubmenuClass(submenuTo)} to={submenuTo} end={submenuTo === '/poetry'} onClick={closeNavigation} key={submenuTo}>
                       {submenuLabel}
                     </NavLink>
                   ))}
                 </div>
               </div>
             ) : (
-              <NavLink key={to} to={to} end={to === '/'}>
+              <NavLink key={to} to={to} end={to === '/'} onClick={closeNavigation}>
                 {label}
               </NavLink>
             )
@@ -243,17 +265,15 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="footer-contact">
+        {/* <div className="footer-contact">
           <h3>Contact</h3>
           <p>{siteSettings.contactEmail}</p>
-          <p>{siteSettings.location}</p>
-          <p>Request an appearance</p>
-        </div>
+        </div> */}
         <div className="footer-contact">
           <h3>Stay in Touch</h3>
           <div className="footer-socials">
             {siteSettings.socialLinks.map((link) => (
-              <a key={link.id} href={link.url}>
+              <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
                 <span aria-hidden="true">
                   <SocialIcon type={link.icon} />
                 </span>
