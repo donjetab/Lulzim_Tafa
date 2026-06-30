@@ -69,67 +69,69 @@ export default function NewsDetails() {
   }
 
   return (
-    <article className="section news-detail news-detail-page">
-      <BackToNewsLink to={backToNews} />
-      <time dateTime={item.date}>{new Date(item.date).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
-      <h1>{item.title}</h1>
-      <div className="detail-image news-detail-image">
-        {image ? (
-          <button type="button" onClick={() => setPreviewImage(image)} aria-label="Preview main article photo">
-            <img src={image} alt="" />
-          </button>
-        ) : (
-          <span>{item.category}</span>
-        )}
-      </div>
-      <div className="news-detail-body">
-        {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        {item.sourceUrl && (
-          <a className="news-source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">
-            {item.sourceUrl}
-          </a>
-        )}
-      </div>
-      {item.relatedSources?.length > 0 && (
-        <section className="news-sources" aria-labelledby="news-sources-title">
-          <p className="eyebrow">Sources</p>
-          <h2 id="news-sources-title">Read this story from other sources</h2>
-          <div className="news-source-grid">
-            {item.relatedSources.map((source) => {
-              const sourceDate = source.date
-                ? new Date(source.date).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
-                : null;
-              return (
-                <a
-                  className="news-source-card"
-                  href={source.url}
-                  key={`${source.label}-${source.url}`}
-                  target={source.isExternal || source.url.startsWith('http') ? '_blank' : undefined}
-                  rel={source.isExternal || source.url.startsWith('http') ? 'noreferrer' : undefined}
-                >
-                  <span>{source.label}</span>
-                  <strong>{source.title}</strong>
-                  <small>{sourceDate}{source.isExternal ? ' - External' : ''}</small>
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      )}
-      {galleryImages.length > 0 && (
-        <div className="news-gallery" aria-label="Photo album">
-          {galleryImages.map((src, index) => (
-            <button
-              key={`${src}-${index}`}
-              type="button"
-              onClick={() => setPreviewImage(src)}
-              aria-label={`Preview photo ${index + 1}`}
-            >
-              <img src={src} alt="" />
+    <>
+      <article className="section news-detail news-detail-page">
+        <BackToNewsLink to={backToNews} />
+        <time dateTime={item.date}>{new Date(item.date).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
+        <h1>{item.title}</h1>
+        <div className="detail-image news-detail-image">
+          {image ? (
+            <button type="button" onClick={() => setPreviewImage(image)} aria-label="Preview main article photo">
+              <img src={image} alt="" />
             </button>
-          ))}
+          ) : (
+            <span>{item.category}</span>
+          )}
         </div>
-      )}
+        <div className="news-detail-body">
+          {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          {item.sourceUrl && (
+            <a className="news-source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">
+              {item.sourceUrl}
+            </a>
+          )}
+        </div>
+        {item.relatedSources?.length > 0 && (
+          <section className="news-sources" aria-labelledby="news-sources-title">
+            <p className="eyebrow">Sources</p>
+            <h2 id="news-sources-title">Read this story from other sources</h2>
+            <div className="news-source-grid">
+              {item.relatedSources.map((source) => {
+                const sourceDate = source.date
+                  ? new Date(source.date).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : null;
+                return (
+                  <a
+                    className="news-source-card"
+                    href={source.url}
+                    key={`${source.label}-${source.url}`}
+                    target={source.isExternal || source.url.startsWith('http') ? '_blank' : undefined}
+                    rel={source.isExternal || source.url.startsWith('http') ? 'noreferrer' : undefined}
+                  >
+                    <span>{source.label}</span>
+                    <strong>{source.title}</strong>
+                    <small>{sourceDate}{source.isExternal ? ' - External' : ''}</small>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        {galleryImages.length > 0 && (
+          <div className="news-gallery" aria-label="Photo album">
+            {galleryImages.map((src, index) => (
+              <button
+                key={`${src}-${index}`}
+                type="button"
+                onClick={() => setPreviewImage(src)}
+                aria-label={`Preview photo ${index + 1}`}
+              >
+                <img src={src} alt="" />
+              </button>
+            ))}
+          </div>
+        )}
+      </article>
       {previewImage && (
         <div className="news-photo-preview" role="dialog" aria-modal="true" aria-label="Photo preview">
           <button className="news-photo-preview-backdrop" type="button" onClick={() => setPreviewImage(null)} aria-label="Close photo preview" />
@@ -139,6 +141,6 @@ export default function NewsDetails() {
           </div>
         </div>
       )}
-    </article>
+    </>
   );
 }

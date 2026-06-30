@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import PoemCard from '../components/PoemCard.jsx';
 import { poemLanguages, poems } from '../data/content.js';
 import { videoPoetryItems } from '../data/videoPoetry.js';
@@ -7,10 +7,11 @@ import { videoPoetryItems } from '../data/videoPoetry.js';
 const POEMS_PER_BATCH = 12;
 
 export default function Poetry() {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [language, setLanguage] = useState('All');
   const [visibleCount, setVisibleCount] = useState(POEMS_PER_BATCH);
-  const activeView = searchParams.get('view') === 'video' ? 'video' : 'written';
+  const activeView = location.pathname === '/poetry/video' || searchParams.get('view') === 'video' ? 'video' : 'written';
   const filteredPoems = useMemo(
     () => language === 'All' ? poems : poems.filter((poem) => poem.language === language),
     [language],
@@ -40,7 +41,7 @@ export default function Poetry() {
           <Link className={activeView === 'written' ? 'active' : ''} to="/poetry">
             Written Poetry
           </Link>
-          <Link className={activeView === 'video' ? 'active' : ''} to="/poetry?view=video">
+          <Link className={activeView === 'video' ? 'active' : ''} to="/poetry/video">
             Video Poetry
           </Link>
         </nav>

@@ -436,6 +436,11 @@ textarea {
   transform: translate3d(0, 0, 0) scale(1);
 }
 
+.book-list-grid .scroll-reveal-item.book-card {
+  transition-duration: 300ms;
+  transition-delay: calc(var(--reveal-index, 0) * 12ms);
+}
+
 .hero-copy,
 .page-hero,
 .section,
@@ -1800,6 +1805,7 @@ textarea {
   background-size: contain;
   border-radius: 0;
   box-shadow: none;
+  pointer-events: none;
   transform: translateX(-50%) rotateY(0deg);
   transform-origin: left center;
   transform-style: preserve-3d;
@@ -2094,6 +2100,8 @@ textarea {
   position: relative;
   display: grid;
   justify-items: center;
+  justify-self: center;
+  width: min(100%, 17.5rem);
   min-height: 0;
   margin-top: var(--poetry-paper-offset, 0);
   aspect-ratio: 0.72;
@@ -2110,6 +2118,7 @@ textarea {
 
 .poetry-paper-card-wide {
   grid-column: span 2;
+  width: 100%;
   aspect-ratio: 1.58;
 }
 
@@ -2136,9 +2145,9 @@ textarea {
 }
 
 .poetry-paper-card-wide .poetry-paper-content {
-  width: 72%;
-  height: 70%;
-  margin-top: 10%;
+  width: 78%;
+  height: 72%;
+  margin-top: 8.5%;
 }
 
 .poetry-language {
@@ -2176,7 +2185,8 @@ textarea {
 }
 
 .poetry-paper-card-wide .poetry-preview p {
-  font-size: clamp(0.95rem, 1vw, 1.08rem);
+  font-size: clamp(0.86rem, 0.95vw, 1rem);
+  line-height: 1.24;
 }
 
 .poetry-read-link {
@@ -2287,6 +2297,16 @@ textarea {
   border: 1px solid rgba(185, 138, 74, 0.22);
   box-shadow: 10px 12px 0 rgba(17, 24, 32, 0.16);
   transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.poetry-video-section.scroll-reveal-item,
+.poetry-video-card.scroll-reveal-item,
+.poetry-video-section.scroll-reveal-item.is-revealed,
+.poetry-video-card.scroll-reveal-item.is-revealed {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition: none;
 }
 
 .poetry-video-card:hover,
@@ -2684,7 +2704,7 @@ textarea {
 .poetry-house-copy {
   display: grid;
   justify-items: start;
-  width: min(100%, 780px);
+  width: min(58%, 16rem);
   margin-left: 10vh;
 }
 
@@ -2696,6 +2716,7 @@ textarea {
   font-size: clamp(3rem, 5.2vw, 5rem);
   font-weight: 700;
   line-height: 0.96;
+  text-align: right;
 }
 
 .poetry-house-copy > span {
@@ -3105,7 +3126,7 @@ textarea {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 248, 234, 0.2), rgba(255, 248, 234, 0.08)),
-    url('../assets/backgrounds/main-background.png') center top / 100% auto repeat-y,
+    url('../assets/backgrounds/main-background.png') center top / cover repeat-y,
     #ead6b4;
 }
 
@@ -3387,10 +3408,14 @@ textarea {
 .news-photo-preview {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 2147483000;
   display: grid;
   place-items: center;
-  padding: clamp(1rem, 3vw, 2.5rem);
+  width: 100vw;
+  height: 100dvh;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .news-photo-preview-backdrop {
@@ -3405,8 +3430,10 @@ textarea {
 .news-photo-preview-panel {
   position: relative;
   z-index: 1;
-  max-width: min(1060px, 92vw);
-  max-height: 88vh;
+  display: grid;
+  place-items: center;
+  width: min(1060px, calc(100vw - 1.5rem));
+  height: min(88dvh, 760px);
   padding: clamp(0.6rem, 1.5vw, 1rem);
   background: rgba(255, 249, 238, 0.94);
   border: 1px solid rgba(185, 138, 74, 0.46);
@@ -3416,8 +3443,9 @@ textarea {
 
 .news-photo-preview-panel img {
   display: block;
-  max-width: 100%;
-  max-height: calc(88vh - 2rem);
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
   object-fit: contain;
   border-radius: 11px;
 }
@@ -5013,7 +5041,9 @@ textarea {
   }
 
   .site-header {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     gap: 1.5rem;
     padding-block: 1.3rem;
   }
@@ -5089,8 +5119,26 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .book-list-grid .scroll-reveal-item.book-card,
+  .book-list-grid .scroll-reveal-item.book-card.is-revealed {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+
+  .poetry-video-grid .scroll-reveal-item.poetry-video-card,
+  .poetry-video-grid .scroll-reveal-item.poetry-video-card.is-revealed {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+
   .award-detail-section {
     width: min(100% - 2.5rem, 760px);
+    justify-items: center;
+    text-align: center;
   }
 
   .awards-section {
@@ -5110,18 +5158,66 @@ textarea {
     grid-column: 1;
   }
 
-  .award-card {
-    width: min(100%, 520px);
+  .award-detail-copy {
+    display: grid;
+    justify-items: center;
+    width: min(100%, 560px);
     margin-inline: auto;
   }
 
+  .award-detail-copy h1,
+  .award-detail-copy p,
+  .award-detail-copy .text-link {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .award-detail-image,
+  .award-detail-image-placeholder {
+    width: min(100%, 620px);
+    margin-inline: auto;
+  }
+
+  .award-card {
+    justify-items: center;
+    width: min(100%, 320px);
+    margin-inline: auto;
+    padding-top: 105px;
+    text-align: center;
+  }
+
+  .award-card-copy {
+    justify-items: center;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .award-card h3,
+  .award-card p,
+  .award-card small {
+    margin-inline: auto;
+    text-align: center;
+  }
+
   .award-card-landscape {
-    justify-items: stretch;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: center;
+    width: min(100%, 350px);
+    aspect-ratio: 1.66;
+    min-height: 0;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 2.45rem) clamp(2rem, 7vw, 2.7rem) clamp(1.55rem, 5vw, 2rem);
+    background-size: 100% 100%;
     text-align: center;
   }
 
   .award-card-landscape .award-card-copy {
+    align-self: start;
     justify-self: center;
+    width: min(100%, 250px);
+    gap: 0.32rem;
+    padding-inline: 0;
     text-align: center;
   }
 
@@ -5132,28 +5228,60 @@ textarea {
   }
 
   .award-card-landscape .award-icon {
+    width: clamp(38px, 10vw, 48px);
+    height: clamp(38px, 10vw, 48px);
+    margin-bottom: 0.48rem;
+    align-self: end;
     justify-self: center;
+  }
+
+  .award-card-landscape h3 {
+    max-width: 16rem;
+    font-size: clamp(0.98rem, 3.9vw, 1.18rem);
+    line-height: 1.02;
+  }
+
+  .award-card-landscape p {
+    max-width: 15.5rem;
+    font-size: clamp(0.64rem, 2.55vw, 0.76rem);
+    line-height: 1.18;
+  }
+
+  .award-card-landscape small {
+    font-size: clamp(0.58rem, 2.3vw, 0.68rem);
+    line-height: 1.08;
   }
 
   .bookshelf {
     padding-inline: 1rem;
+    padding-bottom: clamp(5.2rem, 13vw, 7rem);
   }
 
   .shelf-stage {
-    overflow-x: auto;
-    justify-content: start;
+    overflow-x: visible;
+    justify-content: center;
     width: 100%;
     padding-inline: 1rem;
   }
 
   .shelf-spines {
-    min-width: 640px;
+    min-width: 0;
+  }
+
+  .shelf-book:nth-child(n + 7) {
+    display: none;
   }
 
 
-  .book-is-open .shelf-animated-book {
+  .book-is-open .shelf-animated-book,
+  .book-is-closing .shelf-animated-book {
     width: min(560px, 92vw);
-    height: min(650px, 82vh);
+    height: min(650px, 78vh);
+  }
+
+  .book-is-open .shelf-real-book,
+  .book-is-open .shelf-inside-pages {
+    opacity: 1;
   }
 
   .shelf-inside-pages {
@@ -5169,15 +5297,91 @@ textarea {
   }
 
   .shelf-inside-page-right {
+    align-content: center;
+    justify-items: center;
+    overflow-y: auto;
     padding: clamp(2.4rem, 7vw, 4rem);
     border-radius: 22px;
     box-shadow: none;
+    text-align: center;
   }
 
   .shelf-front-cover {
+    left: 0;
     width: 100%;
     max-width: none;
     border-radius: 22px;
+    transform: rotateY(0deg);
+  }
+
+  .book-is-open .shelf-front-cover {
+    animation-name: shelfFrontCoverOpenMobile;
+  }
+
+  .book-is-closing .shelf-front-cover {
+    animation-name: shelfFrontCoverCloseMobile;
+  }
+
+  @keyframes shelfFrontCoverOpenMobile {
+    0%,
+    35% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 1;
+      transform: rotateY(0deg);
+    }
+
+    65% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 1;
+      transform: rotateY(-65deg);
+    }
+
+    85% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 1;
+      transform: rotateY(-138deg);
+    }
+
+    100% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 0;
+      transform: rotateY(-168deg);
+    }
+  }
+
+  @keyframes shelfFrontCoverCloseMobile {
+    0% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 0;
+      transform: rotateY(-168deg);
+    }
+
+    20%,
+    55% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 1;
+      transform: rotateY(0deg);
+    }
+
+    100% {
+      left: 0;
+      width: 100%;
+      max-width: none;
+      opacity: 1;
+      transform: rotateY(0deg);
+    }
   }
 
   .home-poetry {
@@ -5187,7 +5391,9 @@ textarea {
   }
 
   .poetry-house-hero {
-    background-position: center;
+    overflow: hidden;
+    background-position: left center;
+    background-size: auto 100%;
   }
 
   .poetry-house-feature {
@@ -5241,6 +5447,23 @@ textarea {
   .poetry-hero {
     padding-inline: 2rem;
     background-position: center top;
+  }
+
+  .poetry-hero-copy {
+    display: grid;
+    justify-items: center;
+    width: min(100%, 720px);
+    max-width: none;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .poetry-hero-copy .gold-rule {
+    margin-inline: auto;
+  }
+
+  .poetry-hero-copy p:not(.eyebrow) {
+    max-width: 620px;
   }
 
   .poetry-paper-grid {
@@ -5300,6 +5523,83 @@ textarea {
 }
 
 @media (max-width: 560px) {
+  body {
+    background-size: cover;
+    background-repeat: repeat-y;
+  }
+
+  .news-detail-page {
+    padding: 1.55rem 1.25rem 5rem;
+    background:
+      linear-gradient(180deg, rgba(255, 248, 234, 0.16), rgba(255, 248, 234, 0.08)),
+      url('../assets/backgrounds/main-background.png') center top / cover repeat-y,
+      #ead6b4;
+  }
+
+  .news-detail h1 {
+    margin: 0.65rem auto 1.7rem;
+    font-size: clamp(1.8rem, 8.4vw, 2.35rem);
+    line-height: 0.98;
+  }
+
+  .news-detail time {
+    font-size: 0.78rem;
+  }
+
+  .news-detail-image {
+    margin-bottom: 2.4rem;
+  }
+
+  .news-detail-image img {
+    height: min(58vw, 330px);
+  }
+
+  .award-detail-section {
+    width: 100%;
+    padding: 3.2rem 1.25rem 5.6rem;
+    background:
+      url('../assets/backgrounds/poetry_background.png') center bottom / cover repeat-y,
+      #ead6b4;
+  }
+
+  .award-detail-copy h1 {
+    font-size: clamp(2.35rem, 11vw, 3.45rem);
+    line-height: 0.98;
+  }
+
+  .award-detail-copy p:not(.eyebrow) {
+    max-width: 21rem;
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .award-detail-image,
+  .award-detail-image-placeholder {
+    min-height: 0;
+    padding: clamp(1.6rem, 7vw, 2.4rem);
+  }
+
+  .news-photo-preview {
+    padding: 0.55rem;
+  }
+
+  .news-photo-preview-panel {
+    width: calc(100vw - 1.1rem);
+    height: calc(100dvh - 1.1rem);
+    max-height: none;
+    padding: 0.45rem;
+    border-radius: 12px;
+  }
+
+  .news-photo-preview-panel img {
+    border-radius: 8px;
+  }
+
+  .news-photo-preview-panel button {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
   .site-header {
     display: flex;
     flex-wrap: wrap;
@@ -5316,6 +5616,12 @@ textarea {
   }
   .page-hero-books{
     padding: clamp(4.2rem, 4vw, 3.2rem) 8vw clamp(1.4rem, 3vw, 2.2rem);
+    background: linear-gradient(180deg, rgba(246, 241, 232, 0.08), rgba(239, 225, 200, 0.16));
+  }
+
+  .books-list-section {
+    margin-top: 0;
+    padding-top: clamp(5.2rem, 18vw, 7.2rem);
   }
 
   .shelf-stage::after {
@@ -5673,6 +5979,8 @@ textarea {
   .book-list-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.1rem;
+    row-gap: clamp(3.1rem, 11vw, 4.2rem);
+    margin-bottom: 4rem;
   }
 
   .book-list-grid .book-cover {
@@ -5800,12 +6108,19 @@ textarea {
 
   .home-news .news-grid,
   .news-grid {
+    grid-template-columns: minmax(0, min(100%, 22rem));
+    justify-content: center;
+    justify-items: center;
     gap: 1.35rem;
     width: min(100%, 22rem);
+    margin-inline: auto;
     margin-bottom: 2.6rem;
   }
 
   .news-card {
+    width: 100%;
+    max-width: 22rem;
+    margin-inline: auto;
     border-radius: 10px;
     box-shadow: 0 14px 30px rgba(7, 17, 29, 0.15);
   }
@@ -5867,9 +6182,57 @@ textarea {
   }
 
   .poetry-house-hero {
+    width: 100%;
     min-height: 360px;
-    padding: 2.2rem 1.25rem 3rem;
-    background: url('../assets/backgrounds/poetry_house_header.png') center / 100% 100% no-repeat;
+    justify-items: end;
+    padding: 2.35rem 1.2rem 3rem 1.25rem;
+    background: url('../assets/backgrounds/poetry_house_header.png') left center / auto 100% no-repeat;
+  }
+
+  .poetry-house-page {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(250, 242, 229, 0.52) 0%, rgba(255, 249, 238, 0.68) 34%, rgba(247, 236, 218, 0.78) 70%, rgba(244, 232, 211, 0.9) 100%),
+      url('../assets/backgrounds/main-background.png') top center / cover repeat-y;
+  }
+
+  .poetry-house-copy {
+    justify-items: start;
+    width: min(70%, 24rem);
+    margin-left: auto;
+    text-align: left;
+  }
+
+  .poetry-house-copy h1 {
+    font-size: clamp(2.25rem, 12vw, 3.05rem);
+    line-height: 0.92;
+  }
+
+  .poetry-house-copy .eyebrow {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .poetry-house-copy > span {
+    justify-self: end;
+    margin: 0.5rem 0;
+    font-size: clamp(1rem, 4.4vw, 1.24rem);
+    text-align: right;
+  }
+
+  .poetry-house-copy p:not(.eyebrow) {
+    margin-bottom: 1.1rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    text-align: right;
+  }
+
+  .poetry-house-copy .button-primary {
+    justify-self: end;
+    min-height: 2.5rem;
+    padding-inline: 0.95rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
   }
 
   .poetry-house-feature {
@@ -5884,6 +6247,20 @@ textarea {
   .poetry-house-news {
     padding-top: 3.6rem;
     padding-bottom: 5rem;
+  }
+
+  .poetry-house-news-grid {
+    grid-template-columns: minmax(0, min(100%, 360px));
+    justify-content: center;
+    justify-items: center;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .poetry-house-news-grid .news-card {
+    width: 100%;
+    max-width: 360px;
+    margin-inline: auto;
   }
 
   .poetry-house-carousel {
@@ -5915,8 +6292,13 @@ textarea {
   }
 
   .poetry-hero-copy h1 {
-    max-width: 330px;
+    max-width: 100%;
     font-size: 2.65rem;
+  }
+
+  .poetry-hero-copy p:not(.eyebrow) {
+    width: min(100%, 22rem);
+    max-width: none;
   }
 
   .single-poetry-hero {
@@ -5965,14 +6347,20 @@ textarea {
   }
 
   .poetry-language-filter {
-    gap: 0.7rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.58rem;
+    width: min(100%, 25rem);
+    margin-inline: auto;
   }
 
   .poetry-language-filter button {
-    min-width: 94px;
+    min-width: 0;
     min-height: 36px;
-    padding: 0.3rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.35rem;
+    font-size: clamp(0.58rem, 2.6vw, 0.74rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
   }
 
   .poetry-view-tabs a {
@@ -5988,6 +6376,13 @@ textarea {
 
   .poetry-video-grid {
     grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    width: 100%;
+  }
+
+  .poetry-video-card {
+    width: min(100%, 360px);
+    height: 260px;
   }
 
   .gallery-masonry {
@@ -6016,11 +6411,37 @@ textarea {
   .poetry-paper-card-wide {
     grid-column: auto;
     margin-top: 0;
-    width: min(100%, 330px);
+    width: min(100%, 285px);
   }
 
   .poetry-paper-card-wide {
     width: min(100%, 520px);
+  }
+
+  .poetry-paper-card-wide .poetry-paper-content {
+    width: 82%;
+    height: 74%;
+    margin-top: 7.5%;
+  }
+
+  .poetry-paper-card-wide h3 {
+    margin-bottom: 0.55rem;
+    font-size: clamp(1rem, 4vw, 1.28rem);
+  }
+
+  .poetry-paper-card-wide .poetry-language {
+    margin-bottom: 0.25rem;
+    font-size: 0.58rem;
+  }
+
+  .poetry-paper-card-wide .poetry-preview p {
+    font-size: clamp(0.72rem, 3vw, 0.88rem);
+    line-height: 1.18;
+  }
+
+  .poetry-paper-card-wide .poetry-read-link {
+    margin-top: 0.55rem;
+    font-size: 0.64rem;
   }
 
   .about-hero,

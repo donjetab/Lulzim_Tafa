@@ -9,7 +9,7 @@ export default function PoetryVideoDetails() {
 
   return (
     <article className="section news-detail news-detail-page video-detail-page poetry-video-detail-page">
-      <Link className="news-back-link" to="/poetry?view=video" aria-label="Back to video poetry">
+      <Link className="news-back-link" to="/poetry/video" aria-label="Back to video poetry">
         <span aria-hidden="true">&larr;</span>
         Back to video poetry
       </Link>

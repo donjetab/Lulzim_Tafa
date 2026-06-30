@@ -29,6 +29,7 @@ export default function App() {
           <Route path="/books" element={<Books />} />
           <Route path="/books/:slug" element={<Navigate to="/books" replace />} />
           <Route path="/poetry" element={<Poetry />} />
+          <Route path="/poetry/video" element={<Poetry />} />
           <Route path="/poetry/video/:slug" element={<PoetryVideoDetails />} />
           <Route path="/poetry/:slug" element={<PoetryDetails />} />
           <Route path="/poetry-house" element={<PoetryHouse />} />

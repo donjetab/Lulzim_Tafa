@@ -13,7 +13,7 @@ const navItems = [
   ['Books', '/books'],
   ['Poetry', '/poetry', [
     ['Written Poetry', '/poetry'],
-    ['Video Poetry', '/poetry?view=video'],
+    ['Video Poetry', '/poetry/video'],
   ]],
   ['Poetry House', '/poetry-house'],
   ['News & Interviews', '/news'],
@@ -48,8 +48,6 @@ const revealSelectors = [
   '.poetry-language-filter',
   '.poetry-paper-card',
   '.poetry-paper-card-wide',
-  '.poetry-video-section',
-  '.poetry-video-card',
   '.poetry-house-feature',
   '.poetry-house-gallery-section',
   '.poetry-house-carousel',
@@ -110,7 +108,7 @@ export default function Layout() {
   const location = useLocation();
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isVideoPoetry = location.pathname === '/poetry' && location.search === '?view=video';
+  const isVideoPoetry = location.pathname === '/poetry/video' || (location.pathname === '/poetry' && location.search === '?view=video');
   const isWrittenPoetry = location.pathname === '/poetry' && !isVideoPoetry;
 
   useEffect(() => {
@@ -169,7 +167,7 @@ export default function Layout() {
 
   function getSubmenuClass(itemTo) {
     if (itemTo === '/poetry') return isWrittenPoetry ? 'active' : undefined;
-    if (itemTo === '/poetry?view=video') return isVideoPoetry ? 'active' : undefined;
+    if (itemTo === '/poetry/video') return isVideoPoetry ? 'active' : undefined;
     if (itemTo === '/about#biography') {
       return location.pathname === '/about' && location.hash === '#biography' ? 'active' : undefined;
     }
