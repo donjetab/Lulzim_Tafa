@@ -106,7 +106,7 @@ export default function About() {
     };
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 560px)');
+    const mediaQuery = window.matchMedia('(max-width: 700px)');
     const syncCompactMode = () => setIsCompactTestimonials(mediaQuery.matches);
 
     syncCompactMode();

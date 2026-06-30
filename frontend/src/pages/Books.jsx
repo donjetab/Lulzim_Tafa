@@ -80,7 +80,7 @@ export default function Books() {
   }
 
   return (
-    <>
+    <div className="books-page">
       <PageHero
         eyebrow="Books"
         title="The Bookshelf"
@@ -155,6 +155,6 @@ export default function Books() {
           {listedBooks.map((book) => <BookCard key={book.id} book={book} />)}
         </div>
       </section>
-    </>
+    </div>
   );
 }
