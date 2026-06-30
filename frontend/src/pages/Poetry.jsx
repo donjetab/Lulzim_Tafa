@@ -6,22 +6,45 @@ import { videoPoetryItems } from '../data/videoPoetry.js';
 
 const POEMS_PER_BATCH = 12;
 
+function normalizeSearchText(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 export default function Poetry() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [language, setLanguage] = useState('All');
+  const [titleQuery, setTitleQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(POEMS_PER_BATCH);
   const activeView = location.pathname === '/poetry/video' || searchParams.get('view') === 'video' ? 'video' : 'written';
-  const filteredPoems = useMemo(
-    () => language === 'All' ? poems : poems.filter((poem) => poem.language === language),
-    [language],
-  );
+  const normalizedTitleQuery = normalizeSearchText(titleQuery.trim());
+  const filteredPoems = useMemo(() => {
+    return poems.filter((poem) => {
+      const matchesLanguage = language === 'All' || poem.language === language;
+      const matchesTitle = !normalizedTitleQuery || normalizeSearchText(poem.title).includes(normalizedTitleQuery);
+
+      return matchesLanguage && matchesTitle;
+    });
+  }, [language, normalizedTitleQuery]);
   const isAllPoems = language === 'All';
   const visiblePoems = isAllPoems ? filteredPoems.slice(0, visibleCount) : filteredPoems;
   const hasMorePoems = isAllPoems && visibleCount < filteredPoems.length;
 
   function selectLanguage(nextLanguage) {
     setLanguage(nextLanguage);
+    setVisibleCount(POEMS_PER_BATCH);
+  }
+
+  function updateTitleQuery(event) {
+    setTitleQuery(event.target.value);
+    setVisibleCount(POEMS_PER_BATCH);
+  }
+
+  function clearTitleQuery() {
+    setTitleQuery('');
     setVisibleCount(POEMS_PER_BATCH);
   }
 
@@ -48,6 +71,24 @@ export default function Poetry() {
 
         {activeView === 'written' ? (
           <>
+            <div className="poetry-toolbar">
+              <label className="poetry-search" htmlFor="poetry-title-search">
+                <span>Search Poetry</span>
+                <input
+                  id="poetry-title-search"
+                  type="search"
+                  value={titleQuery}
+                  onChange={updateTitleQuery}
+                  placeholder="Search by title"
+                />
+              </label>
+              {titleQuery && (
+                <button className="poetry-search-clear" type="button" onClick={clearTitleQuery}>
+                  Clear search
+                </button>
+              )}
+            </div>
+
             <div className="poetry-language-filter" aria-label="Filter poems by language">
               <button className={language === 'All' ? 'active' : ''} type="button" onClick={() => selectLanguage('All')}>
                 All
@@ -59,9 +100,13 @@ export default function Poetry() {
               ))}
             </div>
 
-            <div className="poetry-paper-grid">
-              {visiblePoems.map((poem, index) => <PoemCard key={poem.id} poem={poem} index={index} />)}
-            </div>
+            {visiblePoems.length > 0 ? (
+              <div className="poetry-paper-grid">
+                {visiblePoems.map((poem, index) => <PoemCard key={poem.id} poem={poem} index={index} />)}
+              </div>
+            ) : (
+              <p className="poetry-empty-state">No poems found by that title.</p>
+            )}
 
             {hasMorePoems && (
               <div className="poetry-load-more">
