@@ -10,7 +10,6 @@ export const siteSettings = {
   heroTitle: 'Poetry, scholarship, and the enduring language of memory',
   heroText:
     'A warm editorial home for the literary work, public life, awards, interviews, and academic journey of Lulzim Tafa.',
-  contactEmail: 'lulzim.tafa@aab-edu.net',
   location: 'Prishtina, Kosovo',
   socialLinks: [
     { id: 1, label: 'Lulzim Tafa', icon: 'website', url: 'https://en.wikipedia.org/wiki/Lulzim_Tafa' },

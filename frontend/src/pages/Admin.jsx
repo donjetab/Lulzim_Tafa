@@ -9,7 +9,6 @@ const modules = [
   'Awards',
   'Gallery images',
   'Testimonials',
-  'Contact messages',
   'Site settings',
 ];
 

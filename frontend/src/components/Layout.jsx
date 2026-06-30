@@ -2,38 +2,39 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import headerLogo from '../assets/logo/logo-landscape-white_gold.png';
 import { siteSettings } from '../data/content.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const navItems = [
-  ['Home', '/'],
-  ['About', '/about', [
-    ['Biography', '/about#biography'],
-    ['Others About LT', '/about#testimonials'],
-    ['Gallery', '/gallery'],
+  ['nav.home', '/'],
+  ['nav.about', '/about', [
+    ['nav.biography', '/about#biography'],
+    ['nav.othersAbout', '/about#testimonials'],
+    ['nav.gallery', '/gallery'],
   ]],
-  ['Books', '/books'],
-  ['Poetry', '/poetry', [
-    ['Written Poetry', '/poetry'],
-    ['Video Poetry', '/poetry/video'],
+  ['nav.books', '/books'],
+  ['nav.poetry', '/poetry', [
+    ['nav.writtenPoetry', '/poetry'],
+    ['nav.videoPoetry', '/poetry/video'],
   ]],
-  ['Poetry House', '/poetry-house'],
-  ['News & Interviews', '/news'],
-  ['Gallery', '/gallery'],
-  ['Awards', '/awards'],
+  ['nav.poetryHouse', '/poetry-house'],
+  ['nav.newsInterviews', '/news'],
+  ['nav.gallery', '/gallery'],
+  ['nav.awards', '/awards'],
 ];
 
 const footerNavigation = [
-  ['Home', '/'],
-  ['About', '/about'],
-  ['Interviews', '/news'],
-  ['News', '/news'],
-  ['Gallery', '/gallery'],
+  ['nav.home', '/'],
+  ['nav.about', '/about'],
+  ['nav.interviews', '/news'],
+  ['nav.news', '/news'],
+  ['nav.gallery', '/gallery'],
 ];
 
 const footerWork = [
-  ['Books', '/books'],
-  ['Poetry', '/poetry'],
-  ['Poetry House', '/poetry-house'],
-  ['Awards', '/awards'],
+  ['nav.books', '/books'],
+  ['nav.poetry', '/poetry'],
+  ['nav.poetryHouse', '/poetry-house'],
+  ['nav.awards', '/awards'],
 ];
 
 const revealSelectors = [
@@ -68,7 +69,6 @@ const revealSelectors = [
   '.award-detail-image',
   '.testimonial-full-card',
   '.testimonials-toolbar',
-  '.contact-layout',
 ].join(',');
 
 function SocialIcon({ type }) {
@@ -106,6 +106,7 @@ function SocialIcon({ type }) {
 
 export default function Layout() {
   const location = useLocation();
+  const { language, toggleLanguage, t } = useLanguage();
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isVideoPoetry = location.pathname === '/poetry/video' || (location.pathname === '/poetry' && location.search === '?view=video');
@@ -210,7 +211,7 @@ export default function Layout() {
           <span aria-hidden="true" />
         </button>
         <nav id="main-navigation" className={mobileMenuOpen ? 'main-nav is-open' : 'main-nav'} aria-label="Main navigation">
-          {navItems.map(([label, to, submenu]) => (
+          {navItems.map(([labelKey, to, submenu]) => (
             submenu ? (
               <div
                 className={openSubmenu === to ? 'nav-item-with-submenu nav-submenu-open' : 'nav-item-with-submenu'}
@@ -220,23 +221,27 @@ export default function Layout() {
                 onFocus={() => setOpenSubmenu(to)}
               >
                 <NavLink to={to} onClick={closeNavigation}>
-                  {label}
+                  {t(labelKey)}
                 </NavLink>
-                <div className="nav-submenu" aria-label={`${label} sections`}>
-                  {submenu.map(([submenuLabel, submenuTo]) => (
+                <div className="nav-submenu" aria-label={`${t(labelKey)} sections`}>
+                  {submenu.map(([submenuLabelKey, submenuTo]) => (
                     <NavLink className={() => getSubmenuClass(submenuTo)} to={submenuTo} end={submenuTo === '/poetry'} onClick={closeNavigation} key={submenuTo}>
-                      {submenuLabel}
+                      {t(submenuLabelKey)}
                     </NavLink>
                   ))}
                 </div>
               </div>
             ) : (
               <NavLink key={to} to={to} end={to === '/'} onClick={closeNavigation}>
-                {label}
+                {t(labelKey)}
               </NavLink>
             )
           ))}
         </nav>
+        <button className="language-toggle" type="button" onClick={toggleLanguage} aria-label={t('language.switchTo')}>
+          <span className={language === 'en' ? 'is-active' : undefined}>EN</span>
+          <span className={language === 'sq' ? 'is-active' : undefined}>ALB</span>
+        </button>
       </header>
       <main>
         <Outlet />
@@ -244,30 +249,26 @@ export default function Layout() {
       <footer className="site-footer">
         <div className="footer-brand">
           <img src={headerLogo} alt="Lulzim Tafa" />
-          <small>A homepage designed to reflect books, scholarship, and an unmistakably academic public profile.</small>
+          <small>{t('footer.description')}</small>
         </div>
         <nav aria-label="Footer navigation">
-          <h3>Navigation</h3>
-          {footerNavigation.map(([label, to]) => (
+          <h3>{t('footer.navigation')}</h3>
+          {footerNavigation.map(([labelKey, to]) => (
             <NavLink key={to} to={to} end={to === '/'}>
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </nav>
         <nav aria-label="Work links">
-          <h3>Work</h3>
-          {footerWork.map(([label, to]) => (
+          <h3>{t('footer.work')}</h3>
+          {footerWork.map(([labelKey, to]) => (
             <NavLink key={to} to={to}>
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </nav>
-        {/* <div className="footer-contact">
-          <h3>Contact</h3>
-          <p>{siteSettings.contactEmail}</p>
-        </div> */}
         <div className="footer-contact">
-          <h3>Stay in Touch</h3>
+          <h3>{t('footer.stayInTouch')}</h3>
           <div className="footer-socials">
             {siteSettings.socialLinks.map((link) => (
               <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
@@ -279,7 +280,7 @@ export default function Layout() {
             ))}
           </div>
         </div>
-        <p className="footer-credit">© 2026 LULZIM TAFA — Administered by Ardian Sallauka</p>
+        <p className="footer-credit">{t('footer.credit')}</p>
       </footer>
       <button className="back-to-top" type="button" aria-label="Back to top" onClick={scrollToTop}>
         <span aria-hidden="true" />

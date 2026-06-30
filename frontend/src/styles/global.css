@@ -237,6 +237,51 @@ textarea {
   background: transparent;
 }
 
+.language-toggle {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  min-height: 36px;
+  padding: 0.22rem;
+  color: #fff8ea;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(185, 138, 74, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.language-toggle span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.35rem;
+  min-height: 1.65rem;
+  padding-inline: 0.48rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.language-toggle span.is-active {
+  color: #07111d;
+  background: var(--gold);
+}
+
+.language-toggle:hover,
+.language-toggle:focus-visible {
+  background: rgba(185, 138, 74, 0.16);
+  border-color: rgba(185, 138, 74, 0.62);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .hero {
   position: relative;
   display: grid;
@@ -921,20 +966,6 @@ textarea {
   line-height: 0.98;
 }
 
-.home-poetry-copy h2::after {
-  display: block;
-  width: 0;
-  height: 2px;
-  margin-top: 1rem;
-  content: '';
-  background: var(--gold);
-  transition: width 900ms ease 240ms;
-}
-
-.home-poetry-copy.is-visible h2::after {
-  width: min(120px, 42%);
-}
-
 .home-poetry-copy .gold-rule {
   width: 118px;
   margin: 0 0 1.8rem;
@@ -1233,8 +1264,7 @@ textarea {
 
 .about-intro,
 .article-layout,
-.detail-layout,
-.contact-layout {
+.detail-layout {
   display: grid;
   grid-template-columns: minmax(18rem, 0.8fr) minmax(18rem, 1.2fr);
   gap: clamp(2rem, 5vw, 5rem);
@@ -1281,8 +1311,6 @@ textarea {
 .glance-card,
 .poem-card,
 .award-card,
-.contact-cards article,
-.contact-form,
 .admin-grid article {
   background:
     linear-gradient(rgba(255, 248, 234, 0.82), rgba(255, 248, 234, 0.82)),
@@ -4592,16 +4620,10 @@ textarea {
 }
 
 .testimonial-full-card p {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 0;
   color: #413a34;
   font-size: 0.94rem;
   line-height: 1.62;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 10;
-  line-clamp: 10;
 }
 
 .testimonial-full-card footer {
@@ -4921,34 +4943,8 @@ textarea {
     url('../assets/decorative/award-background-portrait.png') center / contain no-repeat;
 }
 
-.contact-cards,
-.contact-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.contact-cards article,
-.contact-form,
 .admin-grid article {
   padding: 1.4rem;
-}
-
-.contact-form label {
-  display: grid;
-  gap: 0.45rem;
-  color: var(--gold-dark);
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.contact-form input,
-.contact-form textarea {
-  width: 100%;
-  padding: 0.9rem 1rem;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(185, 138, 74, 0.32);
 }
 
 .site-footer {
@@ -5097,6 +5093,48 @@ textarea {
   transform: translateY(3px) rotate(45deg);
 }
 
+@media (max-width: 1200px) {
+  body {
+    background-size: max(1200px, 100%) auto;
+  }
+
+  .home-hero {
+    min-height: 670px;
+    background:
+      linear-gradient(0deg, rgba(246, 236, 221, 1) 0%, rgba(246, 236, 221, 0.9) 14%, rgba(246, 236, 221, 0.32) 35%, rgba(246, 236, 221, 0) 56%),
+      linear-gradient(90deg, rgba(246, 236, 221, 1) 0%, rgba(246, 236, 221, 0.98) 28%, rgba(246, 236, 221, 0.76) 45%, rgba(246, 236, 221, 0.14) 58%, rgba(7, 17, 29, 0.18) 100%),
+      linear-gradient(180deg, rgba(7, 17, 29, 0.08) 0%, rgba(7, 17, 29, 0) 44%),
+      url('/src/assets/backgrounds/hero-portrait.png') 62% center / cover no-repeat;
+  }
+
+  .home-page-background {
+    background:
+      linear-gradient(180deg, rgba(246, 236, 221, 0.98) 0%, rgba(246, 236, 221, 0.72) 9rem, rgba(246, 236, 221, 0.12) 24rem),
+      url('../assets/backgrounds/main-background.png') center top / max(1200px, 100%) auto repeat-y,
+      #f3e4cb;
+  }
+
+  .home-books {
+    padding-top: 3.8rem;
+    padding-bottom: 4.2rem;
+  }
+
+  .home-book-row {
+    max-width: 1080px;
+    margin: 3.6rem auto 2.25rem;
+  }
+
+  .home-book-image {
+    width: min(100%, 245px);
+    max-height: 320px;
+  }
+
+  .home-book-mockup:nth-child(4) .home-book-image {
+    width: min(100%, 210px);
+    max-height: 290px;
+  }
+}
+
 @media (max-width: 900px) {
   .site-header,
   .hero,
@@ -5105,7 +5143,6 @@ textarea {
   .about-intro,
   .article-layout,
   .detail-layout,
-  .contact-layout,
   .split-section,
   .site-footer {
     grid-template-columns: 1fr;
@@ -5471,6 +5508,16 @@ textarea {
     transition: none;
   }
 
+  .home-books[data-home-animate],
+  .home-books [data-home-animate],
+  .home-books[data-home-animate].is-visible,
+  .home-books [data-home-animate].is-visible {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+
   .poetry-house-hero {
     overflow: hidden;
     background-position: left center;
@@ -5700,6 +5747,25 @@ textarea {
     width: 7rem;
     max-height: 2rem;
   }
+
+  .brand {
+    order: 1;
+  }
+
+  .language-toggle {
+    order: 2;
+    min-height: 34px;
+    margin-left: auto;
+    margin-right: 0.65rem;
+    padding: 0.2rem;
+  }
+
+  .language-toggle span {
+    min-width: 2.05rem;
+    min-height: 1.5rem;
+    padding-inline: 0.36rem;
+    font-size: 0.6rem;
+  }
   .page-hero-books{
     padding: clamp(4.2rem, 4vw, 3.2rem) 8vw clamp(1.4rem, 3vw, 2.2rem);
     background: linear-gradient(180deg, rgba(246, 241, 232, 0.08), rgba(239, 225, 200, 0.16));
@@ -5720,12 +5786,14 @@ textarea {
   }
 
   .mobile-nav-toggle {
+    order: 3;
     display: grid;
     width: 38px;
     height: 38px;
   }
 
   .main-nav {
+    order: 4;
     display: grid;
     flex-basis: 100%;
     grid-template-columns: 1fr;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
 import { books, newsArticles, poems } from '../data/content.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 
@@ -29,6 +30,7 @@ function getRandomPoem() {
 }
 
 export default function Home() {
+  const { t } = useLanguage();
   const quoteRef = useRef(null);
   const featuredBooks = homeFeaturedBookSlugs
     .map((slug) => books.find((book) => book.slug === slug))
@@ -99,12 +101,12 @@ export default function Home() {
         <div className="hero-copy" data-home-animate="hero">
           <span className="gold-rule" aria-hidden="true" />
           <h1>Lulzim Tafa</h1>
-          <p className="hero-subtitle">A voice shaped by scholarship, literature, and civic reflection.</p>
+          <p className="hero-subtitle">{t('home.subtitle')}</p>
           <span className="gold-rule short" aria-hidden="true" />
-          <p>An authorial space dedicated to books, poetry, public thought, and the intellectual world of Lulzim Tafa</p>
+          <p>{t('home.intro')}</p>
           <div className="button-row">
-            <Link className="button-primary" to="/books">Explore Books</Link>
-            <Link className="button-secondary" to="/poetry">Read Poetry</Link>
+            <Link className="button-primary" to="/books">{t('home.exploreBooks')}</Link>
+            <Link className="button-secondary" to="/poetry">{t('home.readPoetry')}</Link>
           </div>
         </div>
       </section>
@@ -113,9 +115,9 @@ export default function Home() {
         <section className="section home-books" data-home-animate="section">
           <div data-home-animate="fade-up">
             <SectionHeading
-              eyebrow="Featured books"
-              title="Latest Books"
-              text="The first reading of the site should happen visually. Covers, titles, and concise descriptions need room to breathe."
+              eyebrow={t('home.featuredBooks')}
+              title={t('home.latestBooks')}
+              text={t('home.booksText')}
             />
           </div>
           <div className="home-book-row">
@@ -129,16 +131,16 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <Link className="button-secondary centered-button" to="/books" data-home-animate="fade-up">View All Books</Link>
+          <Link className="button-secondary centered-button" to="/books" data-home-animate="fade-up">{t('home.viewAllBooks')}</Link>
         </section>
 
         <section className="home-poetry" data-home-animate="section">
           <div className="home-poetry-copy" data-home-animate="slide-right">
-            <p className="eyebrow">Poetry & Creative Works</p>
-            <h2>A Poetic Voice Shaped by Memory, Silence, and Reflection</h2>
+            <p className="eyebrow">{t('home.poetryEyebrow')}</p>
+            <h2>{t('home.poetryTitle')}</h2>
             <span className="gold-rule short" aria-hidden="true" />
-            <p>Lulzim Tafa's poetry moves between personal memory, collective experience, and the quiet tension of human existence.</p>
-            <Link className="button-primary" to="/poetry">Explore Poetry</Link>
+            <p>{t('home.poetryText')}</p>
+            <Link className="button-primary" to="/poetry">{t('home.explorePoetry')}</Link>
           </div>
           {featuredPoem && (
             <Link className="home-poem-sheet" to={`/poetry/${featuredPoem.slug}`} data-home-animate="paper">
@@ -151,15 +153,15 @@ export default function Home() {
         </section>
 
         <section className="quote-banner" ref={quoteRef} data-home-animate="quote">
-          <p>"Literature is not merely written - it is lived, examined, and questioned."</p>
+          <p>{t('home.quote')}</p>
         </section>
 
         <section className="section home-news" data-home-animate="section">
           <div data-home-animate="fade-up">
             <SectionHeading
-              eyebrow="Latest News"
-              title="News & Updates"
-              text="The first reading of the site should happen visually. Covers, titles, and concise descriptions need room to breathe."
+              eyebrow={t('home.latestNews')}
+              title={t('home.newsTitle')}
+              text={t('home.booksText')}
             />
           </div>
           <div className="news-grid">
@@ -169,7 +171,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <Link className="button-secondary centered-button" to="/news" data-home-animate="fade-up">View All News</Link>
+          <Link className="button-secondary centered-button" to="/news" data-home-animate="fade-up">{t('home.viewAllNews')}</Link>
         </section>
       </div>
     </>

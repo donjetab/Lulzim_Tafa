@@ -14,12 +14,12 @@ import NewsDetails from './pages/NewsDetails.jsx';
 import Gallery from './pages/Gallery.jsx';
 import Awards from './pages/Awards.jsx';
 import AwardDetails from './pages/AwardDetails.jsx';
-import Contact from './pages/Contact.jsx';
 import Admin from './pages/Admin.jsx';
+import { LanguageProvider } from './i18n/LanguageContext.jsx';
 
 export default function App() {
   return (
-    <>
+    <LanguageProvider>
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
@@ -38,10 +38,9 @@ export default function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/awards" element={<Awards />} />
           <Route path="/awards/:slug" element={<AwardDetails />} />
-          <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
         </Route>
       </Routes>
-    </>
+    </LanguageProvider>
   );
 }
