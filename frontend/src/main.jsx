@@ -19,6 +19,9 @@ import { HashRouter } from "react-router-dom";
 import App from "./App.jsx";
 import './styles/global.css';
 
+if (!window.location.hash && window.location.pathname.endsWith('/admin')) {
+  window.history.replaceState(null, '', `${import.meta.env.BASE_URL}#/admin`);
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

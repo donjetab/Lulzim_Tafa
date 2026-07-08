@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { poems } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 function getPoemLines(poem) {
   return (poem.body || '')
@@ -16,6 +17,8 @@ function getStableSeed(value) {
 
 export default function PoetryDetails() {
   const { slug } = useParams();
+  const { language } = useLanguage();
+  const { data: poems } = useCmsData(() => cms.getPoems(undefined, language), fallbackData.poems, [language]);
   const index = poems.findIndex((item) => item.slug === slug);
   const poem = poems[index];
   const previous = poems[index - 1];

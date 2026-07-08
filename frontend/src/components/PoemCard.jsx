@@ -31,7 +31,7 @@ function getPreviewLines(lines, maxLines) {
   };
 }
 
-export default function PoemCard({ poem, index }) {
+export default function PoemCard({ poem, index, onOpen }) {
   const lines = getPoemLines(poem);
   const seed = getStableSeed(`${poem.slug}-${poem.language}-${poem.title}`);
   const longestLine = lines.reduce((longest, line) => Math.max(longest, line.length), 0);
@@ -60,7 +60,7 @@ export default function PoemCard({ poem, index }) {
           {preview.lines.map((line, lineIndex) => <p key={`${poem.id}-${lineIndex}`}>{line}</p>)}
           {preview.isTruncated && <p aria-hidden="true">...</p>}
         </div>
-        <Link className="poetry-read-link" to={`/poetry/${poem.slug}`}>
+        <Link className="poetry-read-link" to={`/poetry/${poem.slug}`} onClick={onOpen}>
           Read the poem
         </Link>
       </div>

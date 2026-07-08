@@ -1,17 +1,21 @@
 import { Link, useLocation } from 'react-router-dom';
+import { resolveMediaUrl } from '../data/api.js';
+import { getListMemoryKey, rememberListScroll } from '../utils/scrollMemory.js';
 
 const newsImageAssets = import.meta.glob('../assets/news/*', { eager: true, query: '?url', import: 'default' });
 
 function getNewsImage(path) {
   if (!path) return null;
   if (/^https?:\/\//.test(path)) return path;
+  if (path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
-  return Object.entries(newsImageAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+  return Object.entries(newsImageAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
 }
 
 export default function NewsCard({ item }) {
   const location = useLocation();
-  const image = getNewsImage(item.image);
+  const listMemoryKey = getListMemoryKey('news', location);
+  const image = getNewsImage(item.thumbnail || item.image);
   const date = new Date(item.date);
   const label = item.isExternal ? 'Open Link' : 'Read More';
   const categoryLabel = item.isExternal ? `${item.category} · External` : item.category;
@@ -49,7 +53,12 @@ export default function NewsCard({ item }) {
   }
 
   return (
-    <Link className="news-card" to={`/news/${item.slug}`} state={{ from: `${location.pathname}${location.search}` }}>
+    <Link
+      className="news-card"
+      to={`/news/${item.slug}`}
+      state={{ from: `${location.pathname}${location.search}` }}
+      onClick={() => rememberListScroll(listMemoryKey)}
+    >
       {content}
     </Link>
   );

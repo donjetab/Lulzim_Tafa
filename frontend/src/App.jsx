@@ -22,6 +22,7 @@ export default function App() {
     <LanguageProvider>
       <ScrollToTop />
       <Routes>
+        <Route path="/admin" element={<Admin />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -38,7 +39,6 @@ export default function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/awards" element={<Awards />} />
           <Route path="/awards/:slug" element={<AwardDetails />} />
-          <Route path="/admin" element={<Admin />} />
         </Route>
       </Routes>
     </LanguageProvider>

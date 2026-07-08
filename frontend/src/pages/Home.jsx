@@ -2,27 +2,22 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { books, newsArticles, poems } from '../data/content.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-
-const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 
 const homeFeaturedBookSlugs = ['antologji-personale', 'ekspozite-me-enderra', 'rivali-i-adamit', 'flirt'];
 
-const homeBookMockups = {
-  'antologji-personale': '/assets/mockups/hp-antologji-personale.png',
-  'ekspozite-me-enderra': '/assets/mockups/hp-ekspozite-me-enderra.png',
-  'rivali-i-adamit': '/assets/mockups/hp-rivali-adamit.png',
-  flirt: '/assets/mockups/hp-flirt.png',
-};
-
-function getBookMockup(path) {
-  if (!path) return null;
-  const filename = path.split('/').pop();
-  return Object.entries(bookMockupAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+function getHomeBookPreviewImage(book, siteSettings, index) {
+  return resolveMediaUrl(
+    siteSettings?.[`homeFeaturedBookMockupPath${index + 1}`]
+    || book?.mockupImagePath
+    || book?.coverImagePath
+    || book?.coverImage
+    || ''
+  );
 }
 
-function getRandomPoem() {
+function getRandomPoem(poems) {
   const albanianPoems = poems.filter((poem) => poem.language === 'Albanian');
   const poemPool = albanianPoems.length ? albanianPoems : poems;
   if (!poemPool.length) return null;
@@ -30,16 +25,22 @@ function getRandomPoem() {
 }
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const quoteRef = useRef(null);
+  const { data: siteSettings } = useCmsData(() => cms.getSiteSettings(language), fallbackData.siteSettings, [language]);
+  const { data: books } = useCmsData(() => cms.getBooks(language), fallbackData.books, [language]);
+  const { data: poems } = useCmsData(() => cms.getPoems(undefined, language), fallbackData.poems, [language]);
+  const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
   const featuredBooks = homeFeaturedBookSlugs
     .map((slug) => books.find((book) => book.slug === slug))
     .filter(Boolean);
-  const featuredPoem = useMemo(() => getRandomPoem(), []);
+  const featuredPoem = useMemo(() => getRandomPoem(poems), [poems]);
   const featuredNews = [...newsArticles]
     .filter((item) => !item.hiddenFromList)
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 3);
+  const featuredNewsKey = featuredNews.map((item) => item.id).join('|');
+  const quoteParallaxImage = resolveMediaUrl(siteSettings.quoteParallaxPath || '/assets/decorative/parallax.png');
 
   useEffect(() => {
     const animatedElements = [...document.querySelectorAll('[data-home-animate]')];
@@ -61,7 +62,7 @@ export default function Home() {
     animatedElements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
-  }, []);
+  }, [featuredNewsKey, featuredBooks.length, featuredPoem?.slug]);
 
   useEffect(() => {
     const section = quoteRef.current;
@@ -100,10 +101,10 @@ export default function Home() {
       <section className="hero home-hero">
         <div className="hero-copy" data-home-animate="hero">
           <span className="gold-rule" aria-hidden="true" />
-          <h1>Lulzim Tafa</h1>
-          <p className="hero-subtitle">{t('home.subtitle')}</p>
+          <h1>{siteSettings.logo || 'Lulzim Tafa'}</h1>
+          <p className="hero-subtitle">{siteSettings.subtitle || t('home.subtitle')}</p>
           <span className="gold-rule short" aria-hidden="true" />
-          <p>{t('home.intro')}</p>
+          <p>{siteSettings.heroText || t('home.intro')}</p>
           <div className="button-row">
             <Link className="button-primary" to="/books">{t('home.exploreBooks')}</Link>
             <Link className="button-secondary" to="/poetry">{t('home.readPoetry')}</Link>
@@ -123,8 +124,8 @@ export default function Home() {
           <div className="home-book-row">
             {featuredBooks.map((book, index) => (
               <div className={`home-book-mockup book-tone-${index + 1}`} data-home-animate="book" style={{ '--home-index': index }} key={book.id}>
-                {getBookMockup(homeBookMockups[book.slug]) ? (
-                  <img className="home-book-image" src={getBookMockup(homeBookMockups[book.slug])} alt={`${book.title} book mockup`} />
+                {getHomeBookPreviewImage(book, siteSettings, index) ? (
+                  <img className="home-book-image" src={getHomeBookPreviewImage(book, siteSettings, index)} alt={`${book.title} book mockup`} />
                 ) : (
                   <span>{book.title}</span>
                 )}
@@ -152,7 +153,12 @@ export default function Home() {
           )}
         </section>
 
-        <section className="quote-banner" ref={quoteRef} data-home-animate="quote">
+        <section
+          className="quote-banner"
+          ref={quoteRef}
+          data-home-animate="quote"
+          style={quoteParallaxImage ? { '--quote-bg-image': `url("${quoteParallaxImage}")` } : undefined}
+        >
           <p>{t('home.quote')}</p>
         </section>
 

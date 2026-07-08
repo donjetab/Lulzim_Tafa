@@ -1,8 +1,11 @@
 import AwardCard from '../components/AwardCard.jsx';
 import PageHero from '../components/PageHero.jsx';
-import { awards } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 export default function Awards() {
+  const { language } = useLanguage();
+  const { data: awards } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
   const portraitAwards = awards.filter((award) => award.layout === 'portrait');
   const landscapeAwards = awards.filter((award) => award.layout !== 'portrait');
 

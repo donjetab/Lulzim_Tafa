@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
+import { resolveMediaUrl } from '../data/api.js';
 
 const awardAssets = import.meta.glob('../assets/decorative/award-*.png', { eager: true, query: '?url', import: 'default' });
 
 function getAwardAsset(path) {
   if (!path) return null;
+  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
-  return Object.entries(awardAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+  return Object.entries(awardAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
 }
 
 export default function AwardCard({ award }) {

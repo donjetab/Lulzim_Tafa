@@ -2,7 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import BookCard from '../components/BookCard.jsx';
 import PageHero from '../components/PageHero.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { books } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 
@@ -45,8 +46,10 @@ function getPreviewTitleStyle(title) {
 }
 
 export default function Books() {
+  const { language, t } = useLanguage();
   const bookRefs = useRef({});
-  const listedBooks = useMemo(() => sortBooksByYear(books), []);
+  const { data: books } = useCmsData(() => cms.getBooks(language), fallbackData.books, [language]);
+  const listedBooks = useMemo(() => sortBooksByYear(books), [books]);
   const shelfBooks = listedBooks.slice(0, 10);
   const [activeBook, setActiveBook] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -82,9 +85,9 @@ export default function Books() {
   return (
     <div className="books-page">
       <PageHero
-        eyebrow="Books"
-        title="The Bookshelf"
-        text="A chronological library of Lulzim Tafa's published poetry books and translated editions."
+        eyebrow={t('books.eyebrow')}
+        title={t('books.title')}
+        text={t('books.text')}
         variant="books"
       />
       <section className="bookshelf" aria-label="Latest books bookshelf">
@@ -129,13 +132,13 @@ export default function Books() {
               <div className="shelf-real-book">
                 <div className="shelf-inside-pages">
                   <div className="shelf-inside-page shelf-inside-page-left">
-                    <p className="eyebrow">{activeBook.year || 'Year to confirm'}</p>
+                    <p className="eyebrow">{activeBook.year || t('books.yearToConfirm')}</p>
                     <h2 style={getPreviewTitleStyle(activeBook.title)}>{activeBook.title}</h2>
                     <p>{activeBook.location || activeBook.category}</p>
                   </div>
                   <div className="shelf-inside-page shelf-inside-page-right">
                     <p>{activeBook.summary}</p>
-                    <button type="button" onClick={closeShelfBook}>Close book</button>
+                    <button type="button" onClick={closeShelfBook}>{t('books.closeBook')}</button>
                   </div>
                 </div>
                 <div
@@ -150,7 +153,7 @@ export default function Books() {
         )}
       </section>
       <section className="section books-list-section">
-        <SectionHeading eyebrow="Library" title="All Books" text="Ordered by publication year, with undated editions kept at the end until their years are confirmed." />
+        <SectionHeading eyebrow={t('books.libraryEyebrow')} title={t('books.libraryTitle')} text={t('books.libraryText')} />
         <div className="book-grid book-list-grid">
           {listedBooks.map((book) => <BookCard key={book.id} book={book} />)}
         </div>

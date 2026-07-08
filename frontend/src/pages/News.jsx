@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
 import PageHero from '../components/PageHero.jsx';
-import { newsArticles } from '../data/content.js';
-import { mediaSpotlightLinks } from '../data/mediaSpotlight.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
+import { getListMemoryKey, restoreListScroll } from '../utils/scrollMemory.js';
 
 const NEWS_PER_PAGE = 9;
 const MEDIA_SPOTLIGHT_FILTER = 'Media Spotlight';
-const filters = ['All', 'News', 'Interview', MEDIA_SPOTLIGHT_FILTER];
+const VIDEO_FILTER = 'Videos';
+const filters = ['All', 'News', 'Interview', VIDEO_FILTER, MEDIA_SPOTLIGHT_FILTER];
 
 function getSearchText(item) {
   const body = Array.isArray(item.body) ? item.body.join(' ') : item.body;
@@ -37,12 +39,15 @@ function getHostName(url) {
 }
 
 export default function News() {
+  const { language, t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
+  const { data: mediaSpotlightLinks } = useCmsData(cms.getMediaSpotlightLinks, fallbackData.mediaSpotlightLinks, []);
   const sortedNews = useMemo(
     () => newsArticles
       .filter((item) => !item.hiddenFromList)
       .sort((a, b) => new Date(b.date) - new Date(a.date)),
-    [],
+    [newsArticles],
   );
   const filterParam = searchParams.get('filter');
   const activeFilter = filters.includes(filterParam) ? filterParam : 'All';
@@ -51,7 +56,9 @@ export default function News() {
   const normalizedSearchQuery = searchQuery.toLowerCase();
   const categoryNews = isMediaSpotlight
     ? []
-    : activeFilter === 'All'
+    : activeFilter === VIDEO_FILTER
+      ? sortedNews.filter((item) => item.videoType || item.videoUrl)
+      : activeFilter === 'All'
       ? sortedNews
       : sortedNews.filter((item) => item.category === activeFilter);
   const filteredNews = normalizedSearchQuery
@@ -65,6 +72,14 @@ export default function News() {
   const page = Math.min(Math.max(requestedPage, 1), pageCount || 1);
   const firstIndex = (page - 1) * NEWS_PER_PAGE;
   const visibleNews = filteredNews.slice(firstIndex, firstIndex + NEWS_PER_PAGE);
+  const listMemoryKey = getListMemoryKey('news', {
+    pathname: '/news',
+    search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+  });
+
+  useEffect(() => {
+    restoreListScroll(listMemoryKey);
+  }, [listMemoryKey, visibleNews.length, filteredMediaSpotlight.length]);
 
   function updateListParams(nextFilter, nextPage, nextSearchQuery = searchQuery) {
     const params = new URLSearchParams();
@@ -87,15 +102,15 @@ export default function News() {
   }
 
   const hasResults = isMediaSpotlight ? filteredMediaSpotlight.length > 0 : visibleNews.length > 0;
-  const searchLabel = isMediaSpotlight ? 'Search media' : 'Search news';
-  const searchPlaceholder = isMediaSpotlight ? 'Search by media name or domain' : 'Search by title, topic, or source';
+  const searchLabel = isMediaSpotlight ? t('news.searchMedia') : t('news.searchNews');
+  const searchPlaceholder = isMediaSpotlight ? t('news.searchMediaPlaceholder') : t('news.searchNewsPlaceholder');
 
   return (
     <>
       <PageHero
-        eyebrow="News & Interviews"
-        title="News, Interviews & Updates"
-        text="Here you can find news, interviews, and updates regarding Lulzim Tafa's activities."
+        eyebrow={t('news.eyebrow')}
+        title={t('news.title')}
+        text={t('news.text')}
         variant="news"
       />
       <section className="section news-list-section">
@@ -112,7 +127,7 @@ export default function News() {
           </label>
           {searchQuery && (
             <button className="news-search-clear" type="button" onClick={clearSearch}>
-              Clear
+              {t('news.clear')}
             </button>
           )}
           <div className="news-filter" aria-label="Filter news">
@@ -135,7 +150,7 @@ export default function News() {
               <a className="media-spotlight-card" href={item.url} target="_blank" rel="noreferrer" key={`${item.name}-${item.url}`}>
                 <span>{getHostName(item.url)}</span>
                 <strong>{item.name}</strong>
-                <small>Open media page for Lulzim Tafa</small>
+                <small>{t('news.openMediaPage')}</small>
               </a>
             ))}
           </div>
@@ -144,7 +159,7 @@ export default function News() {
             {visibleNews.map((item) => <NewsCard key={item.id} item={item} />)}
           </div>
         ) : (
-          <p className="news-empty-state">No {isMediaSpotlight ? 'media outlets' : 'news'} found for your search.</p>
+          <p className="news-empty-state">{isMediaSpotlight ? t('news.emptyMedia') : t('news.empty')}</p>
         )}
         {!isMediaSpotlight && pageCount > 1 && (
           <nav className="news-pagination" aria-label="News pages">

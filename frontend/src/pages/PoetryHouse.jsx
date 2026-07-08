@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
-import { newsArticles } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import poetryHouseStage from '../assets/poetry-house/8X4A4854-1920x1280.webp';
 import poetryHouseAudience from '../assets/poetry-house/8X4A4829-1920x1280.webp';
 import poetryHouseOpening from '../assets/poetry-house/5G7A4747-1-1920x1280.webp';
@@ -60,7 +61,9 @@ function articleMatchesPoetryHouse(article) {
 }
 
 export default function PoetryHouse() {
+  const { language } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
+  const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
   const relatedNews = newsArticles
     .filter((item) => !item.hiddenFromList)
     .filter(articleMatchesPoetryHouse)

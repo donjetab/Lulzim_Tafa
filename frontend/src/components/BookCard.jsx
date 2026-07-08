@@ -1,11 +1,14 @@
+import { resolveMediaUrl } from '../data/api.js';
+
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 // Keep this ready in case we decide to show the flat cover files instead of the mockups.
 // const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
 
 function getBookImage(path, assets) {
   if (!path) return null;
+  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
-  return Object.entries(assets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+  return Object.entries(assets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
 }
 
 export default function BookCard({ book, featured = false }) {

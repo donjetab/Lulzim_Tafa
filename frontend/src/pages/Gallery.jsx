@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const galleryAssetModules = import.meta.glob('../assets/gallery/*', { eager: true, query: '?url', import: 'default' });
 const GALLERY_BATCH_SIZE = 18;
@@ -7,11 +9,19 @@ function getCaption(index) {
   return `Gallery image ${index + 1}`;
 }
 
+function resolveGalleryImage(path) {
+  if (!path) return '';
+  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
+  const filename = path.split('/').pop();
+  return Object.entries(galleryAssetModules).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
+}
+
 export default function Gallery() {
+  const { language } = useLanguage();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(null);
   const [visibleCount, setVisibleCount] = useState(GALLERY_BATCH_SIZE);
   const touchStart = useRef(null);
-  const galleryImages = useMemo(
+  const localGalleryImages = useMemo(
     () => Object.entries(galleryAssetModules)
       .sort(([firstPath], [secondPath]) => firstPath.localeCompare(secondPath))
       .map(([assetPath, src], index) => ({
@@ -20,6 +30,16 @@ export default function Gallery() {
         caption: getCaption(index),
       })),
     [],
+  );
+  const { data: cmsGalleryImages } = useCmsData(() => cms.getGallery(language), fallbackData.galleryImages, [language]);
+  const galleryImages = useMemo(
+    () => (cmsGalleryImages.length ? cmsGalleryImages : localGalleryImages)
+      .map((image, index) => ({
+        ...image,
+        src: resolveGalleryImage(image.src || image.image) || localGalleryImages[index]?.src || '',
+        caption: image.caption || getCaption(index),
+      })),
+    [cmsGalleryImages, localGalleryImages],
   );
   const visibleGalleryImages = galleryImages.slice(0, visibleCount);
   const activeGalleryImage = activeGalleryIndex === null ? null : visibleGalleryImages[activeGalleryIndex];

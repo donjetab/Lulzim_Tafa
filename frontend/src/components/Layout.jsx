@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import headerLogo from '../assets/logo/logo-landscape-white_gold.png';
-import { siteSettings } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const navItems = [
@@ -107,6 +107,7 @@ function SocialIcon({ type }) {
 export default function Layout() {
   const location = useLocation();
   const { language, toggleLanguage, t } = useLanguage();
+  const { data: siteSettings } = useCmsData(() => cms.getSiteSettings(language), fallbackData.siteSettings, [language]);
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isVideoPoetry = location.pathname === '/poetry/video' || (location.pathname === '/poetry' && location.search === '?view=video');

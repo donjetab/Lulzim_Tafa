@@ -1,8 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import PoemCard from '../components/PoemCard.jsx';
-import { poemLanguages, poems } from '../data/content.js';
-import { videoPoetryItems } from '../data/videoPoetry.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
+import {
+  getListMemoryKey,
+  readListState,
+  rememberListScroll,
+  rememberListState,
+  restoreListScroll,
+} from '../utils/scrollMemory.js';
 
 const POEMS_PER_BATCH = 12;
 
@@ -14,11 +21,17 @@ function normalizeSearchText(value) {
 }
 
 export default function Poetry() {
+  const { language: siteLanguage, t } = useLanguage();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [language, setLanguage] = useState('All');
-  const [titleQuery, setTitleQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(POEMS_PER_BATCH);
+  const listMemoryKey = getListMemoryKey('poetry', location);
+  const rememberedState = useMemo(() => readListState(listMemoryKey), [listMemoryKey]);
+  const { data: poems } = useCmsData(() => cms.getPoems(undefined, siteLanguage), fallbackData.poems, [siteLanguage]);
+  const { data: poemLanguages } = useCmsData(cms.getPoemLanguages, fallbackData.poemLanguages, []);
+  const { data: videoPoetryItems } = useCmsData(() => cms.getVideoPoetry(siteLanguage), fallbackData.videoPoetryItems, [siteLanguage]);
+  const [language, setLanguage] = useState(() => rememberedState?.language ?? 'All');
+  const [titleQuery, setTitleQuery] = useState(() => rememberedState?.titleQuery ?? '');
+  const [visibleCount, setVisibleCount] = useState(() => rememberedState?.visibleCount ?? POEMS_PER_BATCH);
   const activeView = location.pathname === '/poetry/video' || searchParams.get('view') === 'video' ? 'video' : 'written';
   const normalizedTitleQuery = normalizeSearchText(titleQuery.trim());
   const filteredPoems = useMemo(() => {
@@ -28,10 +41,19 @@ export default function Poetry() {
 
       return matchesLanguage && matchesTitle;
     });
-  }, [language, normalizedTitleQuery]);
+  }, [language, normalizedTitleQuery, poems]);
   const isAllPoems = language === 'All';
   const visiblePoems = isAllPoems ? filteredPoems.slice(0, visibleCount) : filteredPoems;
   const hasMorePoems = isAllPoems && visibleCount < filteredPoems.length;
+
+  useEffect(() => {
+    restoreListScroll(listMemoryKey);
+  }, [listMemoryKey, visiblePoems.length, videoPoetryItems.length]);
+
+  function rememberPoetryPlace() {
+    rememberListScroll(listMemoryKey);
+    rememberListState(listMemoryKey, { language, titleQuery, visibleCount });
+  }
 
   function selectLanguage(nextLanguage) {
     setLanguage(nextLanguage);
@@ -52,20 +74,20 @@ export default function Poetry() {
     <main className="poetry-page">
       <section className="poetry-hero">
         <div className="poetry-hero-copy">
-          <p className="eyebrow">Poetry</p>
-          <h1>A World of Poetry, Memory and Reflection</h1>
+          <p className="eyebrow">{t('poetry.eyebrow')}</p>
+          <h1>{t('poetry.title')}</h1>
           <span className="gold-rule" />
-          <p>Selected poems, translations, and fragments arranged as paper notes from a literary archive.</p>
+          <p>{t('poetry.text')}</p>
         </div>
       </section>
 
       <section className="poetry-archive">
         <nav className="poetry-view-tabs" aria-label="Poetry sections">
           <Link className={activeView === 'written' ? 'active' : ''} to="/poetry">
-            Written Poetry
+            {t('nav.writtenPoetry')}
           </Link>
           <Link className={activeView === 'video' ? 'active' : ''} to="/poetry/video">
-            Video Poetry
+            {t('nav.videoPoetry')}
           </Link>
         </nav>
 
@@ -73,25 +95,25 @@ export default function Poetry() {
           <>
             <div className="poetry-toolbar">
               <label className="poetry-search" htmlFor="poetry-title-search">
-                <span>Search Poetry</span>
+                <span>{t('poetry.searchLabel')}</span>
                 <input
                   id="poetry-title-search"
                   type="search"
                   value={titleQuery}
                   onChange={updateTitleQuery}
-                  placeholder="Search by title"
+                  placeholder={t('poetry.searchPlaceholder')}
                 />
               </label>
               {titleQuery && (
                 <button className="poetry-search-clear" type="button" onClick={clearTitleQuery}>
-                  Clear search
+                  {t('poetry.clearSearch')}
                 </button>
               )}
             </div>
 
             <div className="poetry-language-filter" aria-label="Filter poems by language">
               <button className={language === 'All' ? 'active' : ''} type="button" onClick={() => selectLanguage('All')}>
-                All
+                {t('poetry.all')}
               </button>
               {poemLanguages.map((item) => (
                 <button key={item} className={language === item ? 'active' : ''} type="button" onClick={() => selectLanguage(item)}>
@@ -102,17 +124,19 @@ export default function Poetry() {
 
             {visiblePoems.length > 0 ? (
               <div className="poetry-paper-grid">
-                {visiblePoems.map((poem, index) => <PoemCard key={poem.id} poem={poem} index={index} />)}
+                {visiblePoems.map((poem, index) => (
+                  <PoemCard key={poem.id} poem={poem} index={index} onOpen={rememberPoetryPlace} />
+                ))}
               </div>
             ) : (
-              <p className="poetry-empty-state">No poems found by that title.</p>
+              <p className="poetry-empty-state">{t('poetry.empty')}</p>
             )}
 
             {hasMorePoems && (
               <div className="poetry-load-more">
                 <p>{visiblePoems.length} of {filteredPoems.length} poems shown</p>
                 <button type="button" onClick={() => setVisibleCount((count) => count + POEMS_PER_BATCH)}>
-                  See more poems
+                  {t('poetry.seeMore')}
                 </button>
               </div>
             )}
@@ -120,9 +144,9 @@ export default function Poetry() {
         ) : (
           <section className="poetry-video-section" aria-labelledby="video-poetry-title">
             <div className="poetry-video-heading">
-              <p className="eyebrow">Video Poetry</p>
-              <h2 id="video-poetry-title">Poems in Video</h2>
-              <p>Selected recordings and video poems will be collected here.</p>
+              <p className="eyebrow">{t('nav.videoPoetry')}</p>
+              <h2 id="video-poetry-title">{t('poetry.videoTitle')}</h2>
+              <p>{t('poetry.videoText')}</p>
             </div>
 
             {videoPoetryItems.length > 0 ? (
@@ -132,9 +156,9 @@ export default function Poetry() {
                     <>
                       <div className="poetry-video-thumb">
                         {item.type === 'youtube' ? (
-                          <img src={item.thumbnail} alt="" />
+                          <img src={resolveMediaUrl(item.thumbnail)} alt="" />
                         ) : (
-                          <video src={encodeURI(item.url)} muted playsInline preload="metadata" />
+                          <video src={encodeURI(resolveMediaUrl(item.url))} muted playsInline preload="metadata" />
                         )}
                         <span className="poetry-video-play" aria-hidden="true" />
                       </div>
@@ -149,7 +173,7 @@ export default function Poetry() {
                       {cardContent}
                     </a>
                   ) : (
-                    <Link className="poetry-video-card" key={item.id} to={`/poetry/video/${item.slug}`}>
+                    <Link className="poetry-video-card" key={item.id} to={`/poetry/video/${item.slug}`} onClick={rememberPoetryPlace}>
                       {cardContent}
                     </Link>
                   );
@@ -157,7 +181,7 @@ export default function Poetry() {
               </div>
             ) : (
               <div className="poetry-video-empty">
-                <p>Video poetry items are ready to be added.</p>
+                <p>{t('poetry.videoEmpty')}</p>
               </div>
             )}
           </section>

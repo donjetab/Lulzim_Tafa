@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  aboutIntroParagraphs,
-  biography,
-  galleryImages,
-  quickFacts,
-  testimonials,
-} from '../data/content.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import decorationImage from '../assets/decorative/bio-decoration.png';
 import portraitImage from '../assets/gallery/about1.jpg';
 import galleryOne from '../assets/gallery/2-2.jpg';
@@ -78,9 +73,18 @@ function QuickFactIcon({ type }) {
 }
 
 export default function About() {
+  const { language, t } = useLanguage();
   const [testimonialPage, setTestimonialPage] = useState(0);
   const [isCompactTestimonials, setIsCompactTestimonials] = useState(false);
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(null);
+  const { data: siteSettings } = useCmsData(() => cms.getSiteSettings(language), fallbackData.siteSettings, [language]);
+  const { data: galleryImages } = useCmsData(() => cms.getGallery(language), fallbackData.galleryImages, [language]);
+  const { data: testimonials } = useCmsData(() => cms.getTestimonials(language), fallbackData.testimonials, [language]);
+  const biography = siteSettings.biography ?? fallbackData.biography;
+  const aboutIntroParagraphs = siteSettings.aboutIntroParagraphs ?? fallbackData.aboutIntroParagraphs;
+  const quickFacts = siteSettings.quickFacts ?? fallbackData.quickFacts;
+  const aboutPortrait = resolveMediaUrl(siteSettings.aboutPortraitPath) || portraitImage;
+  const previewGalleryImages = galleryImages.slice(0, galleryAssets.length);
   const testimonialsPerPage = isCompactTestimonials ? 1 : 2;
   const testimonialPages = [];
 
@@ -101,8 +105,8 @@ export default function About() {
   const activeGalleryImage = activeGalleryIndex === null
     ? null
     : {
-      ...galleryImages[activeGalleryIndex],
-      src: galleryAssets[activeGalleryIndex],
+      ...previewGalleryImages[activeGalleryIndex],
+      src: resolveMediaUrl(previewGalleryImages[activeGalleryIndex]?.src) || galleryAssets[activeGalleryIndex],
     };
 
   useEffect(() => {
@@ -144,10 +148,10 @@ export default function About() {
       const nextIndex = currentIndex + direction;
 
       if (nextIndex < 0) {
-        return galleryImages.length - 1;
+        return previewGalleryImages.length - 1;
       }
 
-      if (nextIndex >= galleryImages.length) {
+      if (nextIndex >= previewGalleryImages.length) {
         return 0;
       }
 
@@ -158,25 +162,25 @@ export default function About() {
   return (
     <main className="about-page">
       <section className="about-hero">
-        <img className="about-portrait" src={portraitImage} alt="Lulzim Tafa speaking at an academic event" />
+        <img className="about-portrait" src={aboutPortrait} alt="Lulzim Tafa speaking at an academic event" />
         <div className="about-hero-copy">
-          <p className="eyebrow">About the Author</p>
-          <h1>A life shaped by Literature, Scholarship, and Public Thought</h1>
+          <p className="eyebrow">{t('about.eyebrow')}</p>
+          <h1>{t('about.title')}</h1>
           {aboutIntroParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </div>
       </section>
 
       <section className="about-life-section" id="biography">
         <article className="about-life-copy">
-          <h2>Lulzim Tafa's Life</h2>
+          <h2>{t('about.lifeTitle')}</h2>
           {biography.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </article>
 
         <aside className="about-glance" aria-label="Lulzim Tafa at a glance">
           <img className="about-glance-decoration" src={decorationImage} alt="" aria-hidden="true" />
           <div className="about-glance-content">
-            <p>Lulzim Tafa's Life</p>
-            <h3>At a Glance</h3>
+            <p>{t('about.lifeTitle')}</p>
+            <h3>{t('about.glanceTitle')}</h3>
             {quickFacts.map(([label, value], index) => (
               <div className="about-fact" key={label}>
                 <QuickFactIcon type={quickFactIcons[index]} />
@@ -192,9 +196,9 @@ export default function About() {
 
       <section className="testimonial-section" id="testimonials">
         <div className="testimonial-heading">
-          <p className="eyebrow">Testimonials & Recognition</p>
-          <h2>Others About Lulzim Tafa</h2>
-          <p>Reflections from colleagues, readers, scholars, and public voices who have been inspired by his work and presence.</p>
+          <p className="eyebrow">{t('about.testimonialsEyebrow')}</p>
+          <h2>{t('about.testimonialsTitle')}</h2>
+          <p>{t('about.testimonialsText')}</p>
         </div>
 
         <div className="testimonial-reader">
@@ -236,22 +240,22 @@ export default function About() {
         </div>
 
         <Link className="button-secondary testimonial-read-all" to="/testimonials">
-          Read All Testimonials
+          {t('about.readAllTestimonials')}
         </Link>
       </section>
 
       <section className="about-gallery-section">
         <div className="about-section-title">
           <div>
-            <p className="eyebrow">Moments and Public Life</p>
-            <h2>Gallery Preview</h2>
+            <p className="eyebrow">{t('about.galleryEyebrow')}</p>
+            <h2>{t('about.galleryTitle')}</h2>
           </div>
-          <a className="button-secondary" href="/gallery">See All Gallery</a>
+          <a className="button-secondary" href="/gallery">{t('about.seeAllGallery')}</a>
         </div>
         <div className="about-gallery-grid" id="gallery">
-          {galleryImages.map((image, index) => (
+          {previewGalleryImages.map((image, index) => (
             <button className="about-gallery-card" type="button" onClick={() => setActiveGalleryIndex(index)} key={image.id} aria-label={`Preview ${image.caption}`}>
-              <img src={galleryAssets[index]} alt={image.caption} />
+              <img src={resolveMediaUrl(image.src) || galleryAssets[index]} alt={image.caption} />
               <span>{image.caption}</span>
             </button>
           ))}

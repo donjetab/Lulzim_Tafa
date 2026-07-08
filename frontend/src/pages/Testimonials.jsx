@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { testimonials } from '../data/content.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 export default function Testimonials() {
+  const { language } = useLanguage();
   const [query, setQuery] = useState('');
-  const [highlightedId, setHighlightedId] = useState(null);
+  const [highlightedId, setHighlightedId] = useState('');
   const { hash } = useLocation();
+  const { data: testimonials } = useCmsData(() => cms.getTestimonials(language), fallbackData.testimonials, [language]);
   const filteredTestimonials = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -15,21 +18,32 @@ export default function Testimonials() {
       const searchableText = `${testimonial.authorName} ${testimonial.authorTitle}`.toLowerCase();
       return searchableText.includes(normalizedQuery);
     });
-  }, [query]);
+  }, [query, testimonials]);
 
   useEffect(() => {
-    const testimonialId = hash.match(/^#testimonial-(\d+)$/)?.[1];
+    const testimonialId = hash.match(/^#testimonial-(.+)$/)?.[1];
 
     if (!testimonialId) {
-      setHighlightedId(null);
+      setHighlightedId('');
       return undefined;
     }
 
-    setHighlightedId(Number(testimonialId));
-    const timeout = window.setTimeout(() => setHighlightedId(null), 5200);
+    const targetId = decodeURIComponent(testimonialId);
+    setHighlightedId(targetId);
 
-    return () => window.clearTimeout(timeout);
-  }, [hash]);
+    const scrollTimeout = window.setTimeout(() => {
+      document.getElementById(`testimonial-${targetId}`)?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
+    }, 120);
+    const clearTimeout = window.setTimeout(() => setHighlightedId(''), 5200);
+
+    return () => {
+      window.clearTimeout(scrollTimeout);
+      window.clearTimeout(clearTimeout);
+    };
+  }, [hash, testimonials]);
 
   return (
     <main className="testimonials-page">
@@ -57,7 +71,7 @@ export default function Testimonials() {
       <section className="testimonials-full-grid" aria-label="All testimonials">
         {filteredTestimonials.map((testimonial) => (
           <article
-            className={testimonial.id === highlightedId ? 'testimonial-full-card is-highlighted' : 'testimonial-full-card'}
+            className={String(testimonial.id) === highlightedId ? 'testimonial-full-card is-highlighted' : 'testimonial-full-card'}
             id={`testimonial-${testimonial.id}`}
             key={testimonial.id}
           >

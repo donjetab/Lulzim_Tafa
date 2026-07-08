@@ -12,13 +12,15 @@ function youtubeItem(id, title, url, options = {}) {
 }
 
 function localItem(slug, title, filename, options = {}) {
+  const basePath = import.meta.env.BASE_URL || '/';
+
   return {
     id: slug,
     slug,
     type: 'local',
     title,
     filename,
-    url: `/assets/video_poetry/${filename}`,
+    url: `${basePath}assets/video_poetry/${filename}`,
     previewFit: options.previewFit,
     previewTime: options.previewTime,
   };

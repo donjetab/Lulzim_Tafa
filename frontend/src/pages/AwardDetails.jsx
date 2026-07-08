@@ -1,16 +1,20 @@
 import { Link, useParams } from 'react-router-dom';
-import { awards } from '../data/content.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const awardImages = import.meta.glob('../assets/awards/*', { eager: true, query: '?url', import: 'default' });
 
 function getAwardImage(path) {
   if (!path) return null;
+  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
-  return Object.entries(awardImages).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+  return Object.entries(awardImages).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
 }
 
 export default function AwardDetails() {
   const { slug } = useParams();
+  const { language } = useLanguage();
+  const { data: awards } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
   const award = awards.find((item) => item.slug === slug);
 
   if (!award) return <section className="section award-detail-section"><h1>Award not found</h1></section>;
