@@ -1,21 +1,46 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
-import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import poetryHouseStage from '../assets/poetry-house/8X4A4854-1920x1280.webp';
 import poetryHouseAudience from '../assets/poetry-house/8X4A4829-1920x1280.webp';
 import poetryHouseOpening from '../assets/poetry-house/5G7A4747-1-1920x1280.webp';
 
-const poetryHouseVideoUrl = 'https://www.youtube.com/embed/SpK74zn2qkU';
+const poetryHouseDefaults = {
+  hero: {
+    eyebrow: 'Poetry House',
+    title: 'The Poetry House',
+    subtitle: 'Theatre & Library',
+    content: 'A dedicated space for poetry performance in Prishtina, founded by Lulzim Tafa and presented through the news reports connected to its opening.',
+    ctaLabel: 'Read the opening report',
+  },
+  video: {
+    eyebrow: 'Video',
+    title: 'Poetry Theatre Opening',
+    content: 'The video presentation follows the public opening of the Poetry Theatre and the atmosphere around the new cultural space.',
+    videoUrl: 'https://www.youtube.com/embed/SpK74zn2qkU',
+  },
+  gallery: {
+    eyebrow: 'Gallery',
+    title: 'Inside the Poetry House',
+    content: 'Selected moments from the theatre space, arranged as a small visual carousel.',
+  },
+  news: {
+    eyebrow: 'Related News',
+    title: 'Poetry Theatre Reports',
+    content: 'Articles connected to the inauguration and public story of the Poetry House and Poetry Theatre.',
+    emptyText: 'No related reports have been added yet.',
+  },
+};
 
-const poetryHouseGallery = [
+const fallbackPoetryHouseGallery = [
   { src: poetryHouseStage, label: 'Poetry Theatre stage' },
   { src: poetryHouseAudience, label: 'Poetry House audience' },
   { src: poetryHouseOpening, label: 'Poetry Theatre opening' },
 ];
 
-const externalPoetryHouseNews = [
+const fallbackExternalPoetryHouseNews = [
   {
     id: 'korrespodenti-poetry-theatre',
     source: 'Korrespodenti',
@@ -60,18 +85,64 @@ function articleMatchesPoetryHouse(article) {
   return poetryHouseKeywords.some((keyword) => searchableText.includes(keyword));
 }
 
+function sectionByKey(sections, key) {
+  return sections.find((section) => section.sectionKey === key);
+}
+
+function getSectionContent(sections, key, fallback) {
+  const section = sectionByKey(sections, key);
+  return {
+    ...fallback,
+    ...(section?.extra ?? {}),
+    title: section?.title ?? fallback.title,
+    subtitle: section?.subtitle ?? fallback.subtitle,
+    content: section?.content ?? fallback.content,
+  };
+}
+
+function normalizeGalleryItems(items) {
+  return (Array.isArray(items) && items.length ? items : fallbackPoetryHouseGallery)
+    .filter((item) => item?.src)
+    .map((item) => ({
+      ...item,
+      src: resolveMediaUrl(item.src),
+    }));
+}
+
+function normalizeExternalNews(items) {
+  return (Array.isArray(items) ? items : fallbackExternalPoetryHouseNews)
+    .filter((item) => item?.url || item?.title)
+    .map((item, index) => ({
+      id: item.id || `poetry-house-external-${index}`,
+      source: item.source || 'External',
+      title: item.title || '',
+      date: item.date || new Date().toISOString(),
+      url: item.url || '#',
+      image: resolveMediaUrl(item.image || ''),
+      excerpt: item.excerpt || 'External report about the inauguration of the Poetry Theatre in Prishtina.',
+    }));
+}
+
 export default function PoetryHouse() {
   const { language } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
+  const { data: pageSections } = useCmsData(() => cms.getPageSections('poetry-house', language), [], [language]);
+  const heroContent = getSectionContent(pageSections, 'hero', poetryHouseDefaults.hero);
+  const videoContent = getSectionContent(pageSections, 'video', poetryHouseDefaults.video);
+  const galleryContent = getSectionContent(pageSections, 'gallery', poetryHouseDefaults.gallery);
+  const newsContent = getSectionContent(pageSections, 'news', poetryHouseDefaults.news);
+  const poetryHouseGallery = normalizeGalleryItems(galleryContent.images);
+  const externalPoetryHouseNews = normalizeExternalNews(newsContent.externalNews);
   const relatedNews = newsArticles
     .filter((item) => !item.hiddenFromList)
     .filter(articleMatchesPoetryHouse)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   const featuredArticle = relatedNews[0];
-  const activeGalleryItem = poetryHouseGallery[activeSlide];
+  const activeGalleryItem = poetryHouseGallery[activeSlide] ?? poetryHouseGallery[0];
 
   function moveSlide(direction) {
+    if (!poetryHouseGallery.length) return;
     setActiveSlide((current) => (current + direction + poetryHouseGallery.length) % poetryHouseGallery.length);
   }
 
@@ -79,15 +150,13 @@ export default function PoetryHouse() {
     <main className="poetry-house-page">
       <section className="poetry-house-hero">
         <div className="poetry-house-copy">
-          <p className="eyebrow">Poetry House</p>
-          <h1>The Poetry House</h1>
-          <span>Theatre & Library</span>
-          <p>
-            A dedicated space for poetry performance in Prishtina, founded by Lulzim Tafa and presented through the news reports connected to its opening.
-          </p>
+          <p className="eyebrow">{heroContent.eyebrow}</p>
+          <h1>{heroContent.title}</h1>
+          <span>{heroContent.subtitle}</span>
+          <p>{heroContent.content}</p>
           {featuredArticle && (
             <Link className="button-primary" to={`/news/${featuredArticle.slug}`}>
-              Read the opening report
+              {heroContent.ctaLabel}
             </Link>
           )}
         </div>
@@ -96,26 +165,24 @@ export default function PoetryHouse() {
       <section className="section poetry-house-feature">
         <div className="poetry-house-video">
           <iframe
-            src={poetryHouseVideoUrl}
+            src={videoContent.videoUrl}
             title="The Poetry House video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
         </div>
         <div className="poetry-house-feature-copy">
-          <p className="eyebrow">Video</p>
-          <h2>Poetry Theatre Opening</h2>
-          <p>
-            The video presentation follows the public opening of the Poetry Theatre and the atmosphere around the new cultural space.
-          </p>
+          <p className="eyebrow">{videoContent.eyebrow}</p>
+          <h2>{videoContent.title}</h2>
+          <p>{videoContent.content}</p>
         </div>
       </section>
 
       <section className="section poetry-house-gallery-section" aria-labelledby="poetry-house-gallery-title">
         <div className="section-heading">
-          <p className="eyebrow">Gallery</p>
-          <h2 id="poetry-house-gallery-title">Inside the Poetry House</h2>
-          <p>Selected moments from the theatre space, arranged as a small visual carousel.</p>
+          <p className="eyebrow">{galleryContent.eyebrow}</p>
+          <h2 id="poetry-house-gallery-title">{galleryContent.title}</h2>
+          <p>{galleryContent.content}</p>
         </div>
         <div className="poetry-house-carousel">
           <button className="poetry-house-carousel-arrow" type="button" onClick={() => moveSlide(-1)} aria-label="Previous Poetry House photo">
@@ -145,9 +212,9 @@ export default function PoetryHouse() {
 
       <section className="section poetry-house-news">
         <div className="section-heading">
-          <p className="eyebrow">Related News</p>
-          <h2>Poetry Theatre Reports</h2>
-          <p>Articles connected to the inauguration and public story of the Poetry House and Poetry Theatre.</p>
+          <p className="eyebrow">{newsContent.eyebrow}</p>
+          <h2>{newsContent.title}</h2>
+          <p>{newsContent.content}</p>
         </div>
         {relatedNews.length + externalPoetryHouseNews.length > 0 ? (
           <div className="news-grid poetry-house-news-grid">
@@ -166,7 +233,7 @@ export default function PoetryHouse() {
                     </time>
                     <p className="eyebrow">News · {item.source}</p>
                     <h3>{item.title}</h3>
-                    <p>External report about the inauguration of the Poetry Theatre in Prishtina.</p>
+                    <p>{item.excerpt}</p>
                     <span className="text-link">Open Link <span aria-hidden="true">&rarr;</span></span>
                   </div>
                 </a>
@@ -174,7 +241,7 @@ export default function PoetryHouse() {
             })}
           </div>
         ) : (
-          <p className="poetry-house-empty">No related reports have been added yet.</p>
+          <p className="poetry-house-empty">{newsContent.emptyText}</p>
         )}
       </section>
     </main>

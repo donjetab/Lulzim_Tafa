@@ -1,8 +1,7 @@
 import { resolveMediaUrl } from '../data/api.js';
 
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
-// Keep this ready in case we decide to show the flat cover files instead of the mockups.
-// const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
+const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
 
 function getBookImage(path, assets) {
   if (!path) return null;
@@ -12,9 +11,7 @@ function getBookImage(path, assets) {
 }
 
 export default function BookCard({ book, featured = false }) {
-  const cover = getBookImage(book.mockupImage, bookMockupAssets);
-  // Cover-folder fallback, if we change direction later:
-  // const cover = getBookImage(book.mockupImage, bookMockupAssets) ?? getBookImage(book.coverImage, bookCoverAssets);
+  const cover = getBookImage(book.mockupImage, bookMockupAssets) ?? getBookImage(book.coverImage, bookCoverAssets);
   const meta = [book.category, book.location, book.year].filter(Boolean);
 
   return (

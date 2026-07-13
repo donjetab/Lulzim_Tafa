@@ -250,7 +250,7 @@ export default function About() {
             <p className="eyebrow">{t('about.galleryEyebrow')}</p>
             <h2>{t('about.galleryTitle')}</h2>
           </div>
-          <a className="button-secondary" href="/gallery">{t('about.seeAllGallery')}</a>
+          <Link className="button-secondary" to="/gallery">{t('about.seeAllGallery')}</Link>
         </div>
         <div className="about-gallery-grid" id="gallery">
           {previewGalleryImages.map((image, index) => (

@@ -46,7 +46,7 @@ export default function NewsCard({ item }) {
 
   if (item.isExternal) {
     return (
-      <a className="news-card" href={item.externalUrl} target="_blank" rel="noreferrer">
+      <a className="news-card" href={item.externalUrl || item.sourceUrl || item.url || '#'} target="_blank" rel="noreferrer">
         {content}
       </a>
     );

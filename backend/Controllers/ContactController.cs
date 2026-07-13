@@ -21,6 +21,6 @@ public class ContactController(AppDbContext db) : ControllerBase
     [HttpGet("messages")]
     public async Task<ActionResult<IEnumerable<ContactMessage>>> GetMessages()
     {
-        return await db.ContactMessages.OrderByDescending(message => message.CreatedAtUtc).ToListAsync();
+        return await db.ContactMessages.AsNoTracking().OrderByDescending(message => message.CreatedAtUtc).ToListAsync();
     }
 }

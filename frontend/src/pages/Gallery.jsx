@@ -115,6 +115,7 @@ export default function Gallery() {
           {visibleGalleryImages.map((image, index) => (
             <button className="gallery-masonry-card" type="button" onClick={() => setActiveGalleryIndex(index)} key={image.id} aria-label={`Preview ${image.caption}`}>
               <img src={image.src} alt={image.caption} loading="lazy" decoding="async" fetchPriority={index < 6 ? 'auto' : 'low'} />
+              {image.caption ? <span>{image.caption}</span> : null}
             </button>
           ))}
         </div>
@@ -138,6 +139,7 @@ export default function Gallery() {
               <span aria-hidden="true" />
             </button>
             <img src={activeGalleryImage.src} alt={activeGalleryImage.caption} />
+            {activeGalleryImage.caption ? <p className="gallery-lightbox-caption">{activeGalleryImage.caption}</p> : null}
             <button className="gallery-lightbox-nav gallery-lightbox-next" type="button" onClick={() => moveGalleryPreview(1)} aria-label="Next image">
               <span aria-hidden="true" />
             </button>

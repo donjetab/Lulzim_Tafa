@@ -16,7 +16,7 @@ import { mediaSpotlightLinks } from './mediaSpotlight.js';
 import { videoPoetryItems } from './videoPoetry.js';
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL
-  || (['5173', '5174'].includes(window.location.port) ? 'http://127.0.0.1:5000' : '');
+  || (['5173', '5174'].includes(window.location.port) ? `${window.location.protocol}//${window.location.hostname}:5000` : '');
 const APP_BASE = import.meta.env.BASE_URL || '/';
 const assetModules = import.meta.glob('../assets/**/*', { eager: true, query: '?url', import: 'default' });
 const assetUrlMap = new Map(Object.entries(assetModules).map(([assetPath, url]) => [
@@ -40,48 +40,57 @@ function settingMap(settings) {
   return new Map((Array.isArray(settings) ? settings : []).map((setting) => [setting.key, setting.value]));
 }
 
-const contentTranslationFields = {
-  books: ['title', 'category', 'location', 'summary', 'description'],
-  poems: ['title', 'excerpt', 'body'],
-  news: ['title', 'category', 'excerpt', 'body', 'galleryImagesJson', 'relatedSourcesJson'],
-  awards: ['title', 'description', 'location'],
-  gallery: ['caption'],
-  testimonials: ['quote', 'authorName', 'authorTitle'],
-  'video-poetry': ['title'],
-};
-
-function contentTranslationKey(collection, id, field, language) {
-  return `content.${collection}.${id}.${field}.${language}`;
+function translationMap(translations) {
+  const values = new Map();
+  (Array.isArray(translations) ? translations : []).forEach((translation) => {
+    const key = translation.key;
+    if (!key) return;
+    const value = translation.value ?? '';
+    const existing = values.get(key);
+    if (value || existing === undefined) values.set(key, value);
+  });
+  return values;
 }
 
-function applyContentTranslations(collection, item, settings, language = 'en') {
-  if (language === 'en' || !item?.id) return item;
-
-  const values = settings instanceof Map ? settings : settingMap(settings);
-  const fields = contentTranslationFields[collection] ?? [];
-  const translatedFields = fields.reduce((nextFields, field) => {
-    const translatedValue = values.get(contentTranslationKey(collection, item.id, field, language));
-    return translatedValue === undefined ? nextFields : { ...nextFields, [field]: translatedValue };
-  }, {});
-
-  return Object.keys(translatedFields).length ? { ...item, ...translatedFields } : item;
+function pageSectionMap(sections) {
+  return new Map((Array.isArray(sections) ? sections : []).map((section) => [section.sectionKey, section]));
 }
 
-function applyContentTranslationList(collection, items, settings, language = 'en') {
-  return items.map((item) => applyContentTranslations(collection, item, settings, language));
+function normalizePageSection(section) {
+  let extra = {};
+
+  try {
+    extra = section?.extraJson ? JSON.parse(section.extraJson) : {};
+  } catch {
+    extra = {};
+  }
+
+  return {
+    ...section,
+    extra,
+  };
 }
 
-function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks, language = 'en') {
+function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks, translations = [], pageSections = {}) {
   const values = settingMap(settings);
-  const getSetting = (key, fallback) => values.get(`${key}.${language}`) ?? values.get(key) ?? fallback;
+  const translatedValues = translationMap(translations);
+  const homeSections = pageSectionMap(pageSections.home);
+  const aboutSections = pageSectionMap(pageSections.about);
+  const mediaSections = pageSectionMap(pageSections.media);
+  const getTranslation = (key, fallback) => translatedValues.get(key) ?? values.get(key) ?? fallback;
+  const homeHero = homeSections.get('hero');
+  const biographySection = aboutSections.get('biography');
+  const aboutIntroSection = aboutSections.get('intro');
+  const quickFactsSection = aboutSections.get('quick-facts');
+  const mediaLinksSection = mediaSections.get('spotlight-links');
 
   return {
     ...siteSettings,
-    logo: getSetting('logo', siteSettings.logo),
-    subtitle: getSetting('subtitle', siteSettings.subtitle),
-    heroTitle: getSetting('heroTitle', siteSettings.heroTitle),
-    heroText: getSetting('heroText', siteSettings.heroText),
-    location: getSetting('location', siteSettings.location),
+    logo: getTranslation('logo', siteSettings.logo),
+    subtitle: getTranslation('subtitle', siteSettings.subtitle),
+    heroTitle: homeHero?.title ?? getTranslation('heroTitle', siteSettings.heroTitle),
+    heroText: homeHero?.content ?? getTranslation('heroText', siteSettings.heroText),
+    location: getTranslation('location', siteSettings.location),
     heroImagePath: values.get('heroImagePath') ?? '/assets/backgrounds/hero-portrait.png',
     heroBackgroundPath: values.get('heroBackgroundPath') ?? '/assets/backgrounds/main-background.png',
     quoteParallaxPath: values.get('quoteParallaxPath') ?? '/assets/decorative/parallax.png',
@@ -90,10 +99,10 @@ function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks,
     homeFeaturedBookMockupPath3: values.get('homeFeaturedBookMockupPath3') ?? '/assets/mockups/hp-rivali-adamit.png',
     homeFeaturedBookMockupPath4: values.get('homeFeaturedBookMockupPath4') ?? '/assets/mockups/hp-flirt.png',
     aboutPortraitPath: values.get('aboutPortraitPath') ?? '/assets/gallery/about1.jpg',
-    biography: parseJsonArray(getSetting('biography', null), biography),
-    aboutIntroParagraphs: parseJsonArray(getSetting('aboutIntroParagraphs', null), aboutIntroParagraphs),
-    quickFacts: parseJsonArray(getSetting('quickFacts', null), quickFacts),
-    mediaSpotlightLinks: parseJsonArray(values.get('mediaSpotlightLinks'), mediaSpotlightLinks),
+    biography: parseJsonArray(biographySection?.content ?? values.get('biography'), biography),
+    aboutIntroParagraphs: parseJsonArray(aboutIntroSection?.content ?? values.get('aboutIntroParagraphs'), aboutIntroParagraphs),
+    quickFacts: parseJsonArray(quickFactsSection?.extraJson ?? values.get('quickFacts'), quickFacts),
+    mediaSpotlightLinks: parseJsonArray(mediaLinksSection?.extraJson ?? values.get('mediaSpotlightLinks'), mediaSpotlightLinks),
     socialLinks: socialLinks.map((link) => ({
       id: link.id,
       label: link.label,
@@ -186,7 +195,7 @@ function normalizeNews(article) {
     hiddenFromList: article.hiddenFromList ?? false,
     videoType,
     videoUrl,
-    videoPreviewUrl: article.videoType === 'local' ? article.videoUrl : '',
+    videoPreviewUrl: String(videoType).toLowerCase() === 'local' ? videoUrl : '',
     featured: article.isFeatured ?? article.featured ?? false,
   };
 }
@@ -194,8 +203,10 @@ function normalizeNews(article) {
 function normalizeAward(award) {
   return {
     ...award,
+    slug: award.slug || slugFromText(award.title),
     icon: award.iconPath ?? award.icon ?? '',
     image: award.certificateImagePath ?? award.image ?? '',
+    layout: award.layout ?? '',
     featured: award.isFeatured ?? award.featured ?? false,
   };
 }
@@ -221,14 +232,45 @@ function normalizeVideoPoetry(item) {
   };
 }
 
+function getFallbackVideoPoetryItem(slug) {
+  return videoPoetryItems.find((item) => item.slug === slug || item.id === slug) ?? null;
+}
+
 function newestFirst(items) {
-  return [...items].sort((first, second) => (Number(second.id) || 0) - (Number(first.id) || 0));
+  return [...items]
+    .map((item, index) => ({ item, index }))
+    .sort((first, second) => {
+      const secondId = Number(second.item?.id);
+      const firstId = Number(first.item?.id);
+      const hasNumericIds = Number.isFinite(secondId) && Number.isFinite(firstId);
+
+      if (hasNumericIds && secondId !== firstId) return secondId - firstId;
+      return second.index - first.index;
+    })
+    .map(({ item }) => item);
 }
 
 async function request(path) {
-  const response = await fetch(`${API_BASE}${path}`);
-  if (!response.ok) throw new Error(await response.text());
-  return response.json();
+  const response = await fetch(`${API_BASE}${path}`, { cache: 'no-store' });
+  const responseText = await response.text();
+  let responseData = null;
+
+  if (responseText) {
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = responseText;
+    }
+  }
+
+  if (!response.ok) {
+    const message = typeof responseData === 'string'
+      ? responseData
+      : responseData?.message || responseData?.error || `Request failed with status ${response.status}.`;
+    throw new Error(message);
+  }
+
+  return responseData;
 }
 
 export function resolveMediaUrl(path) {
@@ -288,70 +330,95 @@ export const fallbackData = {
   aboutIntroParagraphs,
   quickFacts,
   mediaSpotlightLinks,
-  videoPoetryItems,
+  videoPoetryItems: newestFirst(videoPoetryItems),
 };
 
 export const cms = {
   getSiteSettings: async (language = 'en') => {
-    const [settings, socialLinks] = await Promise.all([
+    const translationRequests = language === 'en'
+      ? [request('/api/site-translations?lang=en'), Promise.resolve([])]
+      : [
+          request('/api/site-translations?lang=en'),
+          request(`/api/site-translations?lang=${encodeURIComponent(language)}`),
+        ];
+    const [settings, socialLinks, englishTranslations, languageTranslations, homeSections, aboutSections, mediaSections] = await Promise.all([
       request('/api/site-settings'),
       request('/api/site-settings/social-links'),
+      ...translationRequests,
+      request(`/api/page-sections/home?lang=${encodeURIComponent(language)}`),
+      request(`/api/page-sections/about?lang=${encodeURIComponent(language)}`),
+      request(`/api/page-sections/media?lang=${encodeURIComponent(language)}`),
     ]);
-    return normalizeSiteSettings(settings, socialLinks, language);
+    const translations = language === 'en'
+      ? englishTranslations
+      : [...englishTranslations, ...languageTranslations];
+    return normalizeSiteSettings(settings, socialLinks, translations, {
+      home: homeSections,
+      about: aboutSections,
+      media: mediaSections,
+    });
   },
   getBooks: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/books'), request('/api/site-settings')]);
-    return applyContentTranslationList('books', items, settings, language).map(normalizeBook);
+    const items = await request(`/api/books?lang=${encodeURIComponent(language)}`);
+    return items.map(normalizeBook);
   },
   getBook: async (slug, language = 'en') => {
-    const [item, settings] = await Promise.all([request(`/api/books/${slug}`), request('/api/site-settings')]);
-    return normalizeBook(applyContentTranslations('books', item, settings, language));
+    const item = await request(`/api/books/${slug}?lang=${encodeURIComponent(language)}`);
+    return normalizeBook(item);
   },
   getPoems: async (poemLanguage, language = 'en') => {
-    const [items, settings] = await Promise.all([
-      request(`/api/poems${poemLanguage ? `?language=${encodeURIComponent(poemLanguage)}` : ''}`),
-      request('/api/site-settings'),
-    ]);
-    return newestFirst(applyContentTranslationList('poems', items, settings, language).map(normalizePoem));
+    const items = await request(`/api/poems${poemLanguage ? `?language=${encodeURIComponent(poemLanguage)}` : ''}`);
+    return newestFirst(items.map(normalizePoem));
   },
   getPoem: async (slug, language = 'en') => {
-    const [item, settings] = await Promise.all([request(`/api/poems/${slug}`), request('/api/site-settings')]);
-    return normalizePoem(applyContentTranslations('poems', item, settings, language));
+    const item = await request(`/api/poems/${slug}`);
+    return normalizePoem(item);
   },
   getPoemLanguages: async () => (await request('/api/poems/languages')).map((language) => language.name ?? language.Name ?? language),
   getNews: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/news'), request('/api/site-settings')]);
-    return applyContentTranslationList('news', items, settings, language).map(normalizeNews);
+    const items = await request(`/api/news?lang=${encodeURIComponent(language)}`);
+    return items.map(normalizeNews);
   },
   getNewsArticle: async (slug, language = 'en') => {
-    const [item, settings] = await Promise.all([request(`/api/news/${slug}`), request('/api/site-settings')]);
-    return normalizeNews(applyContentTranslations('news', item, settings, language));
+    const item = await request(`/api/news/${slug}?lang=${encodeURIComponent(language)}`);
+    return normalizeNews(item);
   },
   getAwards: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/awards'), request('/api/site-settings')]);
-    return applyContentTranslationList('awards', items, settings, language).map(normalizeAward);
+    const items = await request(`/api/awards?lang=${encodeURIComponent(language)}`);
+    return items.map(normalizeAward);
   },
   getAward: async (slug, language = 'en') => {
-    const [item, settings] = await Promise.all([request(`/api/awards/${slug}`), request('/api/site-settings')]);
-    return normalizeAward(applyContentTranslations('awards', item, settings, language));
+    const item = await request(`/api/awards/${slug}?lang=${encodeURIComponent(language)}`);
+    return normalizeAward(item);
   },
   getGallery: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/gallery'), request('/api/site-settings')]);
-    return newestFirst(applyContentTranslationList('gallery', items, settings, language).map(normalizeGalleryImage));
+    const items = await request(`/api/gallery?lang=${encodeURIComponent(language)}`);
+    return newestFirst(items.map(normalizeGalleryImage));
   },
   getTestimonials: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/testimonials'), request('/api/site-settings')]);
-    return newestFirst(applyContentTranslationList('testimonials', items, settings, language));
+    const items = await request(`/api/testimonials?lang=${encodeURIComponent(language)}`);
+    return newestFirst(items);
   },
-  getBiography: async () => (await cms.getSiteSettings()).biography,
-  getQuickFacts: async () => (await cms.getSiteSettings()).quickFacts,
-  getMediaSpotlightLinks: async () => (await cms.getSiteSettings()).mediaSpotlightLinks,
+  getBiography: async (language = 'en') => (await cms.getSiteSettings(language)).biography,
+  getQuickFacts: async (language = 'en') => (await cms.getSiteSettings(language)).quickFacts,
+  getMediaSpotlightLinks: async (language = 'en') => (await cms.getSiteSettings(language)).mediaSpotlightLinks,
+  getPageSections: async (pageKey, language = 'en') => {
+    const sections = await request(`/api/page-sections/${encodeURIComponent(pageKey)}?lang=${encodeURIComponent(language)}`);
+    return Array.isArray(sections) ? sections.map(normalizePageSection) : [];
+  },
   getVideoPoetry: async (language = 'en') => {
-    const [items, settings] = await Promise.all([request('/api/video-poetry'), request('/api/site-settings')]);
-    return applyContentTranslationList('video-poetry', items, settings, language).map(normalizeVideoPoetry);
+    const items = await request(`/api/video-poetry?lang=${encodeURIComponent(language)}`);
+    const sourceItems = Array.isArray(items) && items.length > 0 ? items : videoPoetryItems;
+    return newestFirst(sourceItems.map(normalizeVideoPoetry));
   },
   getVideoPoetryItem: async (slug, language = 'en') => {
-    const [item, settings] = await Promise.all([request(`/api/video-poetry/${slug}`), request('/api/site-settings')]);
-    return normalizeVideoPoetry(applyContentTranslations('video-poetry', item, settings, language));
+    try {
+      const item = await request(`/api/video-poetry/${slug}?lang=${encodeURIComponent(language)}`);
+      return normalizeVideoPoetry(item);
+    } catch {
+      const fallbackItem = getFallbackVideoPoetryItem(slug);
+      if (!fallbackItem) throw new Error(`Video poetry item "${slug}" was not found.`);
+      return normalizeVideoPoetry(fallbackItem);
+    }
   },
 };

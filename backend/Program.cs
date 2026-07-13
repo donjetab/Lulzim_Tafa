@@ -1,4 +1,6 @@
 using LulzimTafa.Api.Data;
+using LulzimTafa.Api.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 
@@ -10,13 +12,39 @@ builder.Logging.AddDebug();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "lulzim_tafa_admin";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = AdminSession.Duration;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins("http://127.0.0.1:5173", "http://localhost:5173")
+        policy.WithOrigins(
+                "http://127.0.0.1:5173",
+                "http://localhost:5173",
+                "http://127.0.0.1:5174",
+                "http://localhost:5174")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -24,8 +52,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddHostedService<UnusedUploadCleanupService>();
 
 var app = builder.Build();
+
+await MultilingualContentInitializer.InitializeAsync(app.Services);
+await AdminAccountInitializer.InitializeAsync(app.Services);
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -44,12 +76,75 @@ if (Directory.Exists(frontendDistPath))
 }
 
 app.UseCors("Frontend");
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception exception) when (context.Request.Path.StartsWithSegments("/api"))
+    {
+        app.Logger.LogError(exception, "Unhandled API error for {Method} {Path}", context.Request.Method, context.Request.Path);
+
+        if (!context.Response.HasStarted)
+        {
+            context.Response.Clear();
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { message = "An unexpected server error occurred." });
+        }
+    }
+});
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var isAuthEndpoint = context.Request.Path.StartsWithSegments("/api/auth/login")
+        || context.Request.Path.StartsWithSegments("/api/auth/me");
+    var isPublicContact = HttpMethods.IsPost(context.Request.Method)
+        && context.Request.Path.StartsWithSegments("/api/contact");
+    var isUnsafeApiRequest = context.Request.Path.StartsWithSegments("/api")
+        && !HttpMethods.IsGet(context.Request.Method)
+        && !HttpMethods.IsHead(context.Request.Method)
+        && !HttpMethods.IsOptions(context.Request.Method);
+
+    if (isUnsafeApiRequest
+        && !isAuthEndpoint
+        && !isPublicContact
+        && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsJsonAsync(new { message = "Admin login is required." });
+        return;
+    }
+
+    if (context.Request.Path.StartsWithSegments("/admin")
+        && !context.Request.Path.StartsWithSegments("/admin-login")
+        && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.Redirect("/");
+        return;
+    }
+
+    await next();
+});
 app.MapControllers();
 
 if (Directory.Exists(frontendDistPath))
 {
     app.MapFallback(async context =>
     {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("""{"error":"API route not found."}""");
+            return;
+        }
+
         context.Response.ContentType = "text/html";
         await context.Response.SendFileAsync(Path.Combine(frontendDistPath, "index.html"));
     });

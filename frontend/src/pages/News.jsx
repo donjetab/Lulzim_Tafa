@@ -42,7 +42,7 @@ export default function News() {
   const { language, t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
-  const { data: mediaSpotlightLinks } = useCmsData(cms.getMediaSpotlightLinks, fallbackData.mediaSpotlightLinks, []);
+  const { data: mediaSpotlightLinks } = useCmsData(() => cms.getMediaSpotlightLinks(language), fallbackData.mediaSpotlightLinks, [language]);
   const sortedNews = useMemo(
     () => newsArticles
       .filter((item) => !item.hiddenFromList)

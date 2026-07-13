@@ -2,10 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import BookCard from '../components/BookCard.jsx';
 import PageHero from '../components/PageHero.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
+const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
 
 const shelfSpineColors = [
   ['#cbc5b9', '#cbc5b9'],
@@ -22,8 +23,11 @@ const shelfSpineColors = [
 
 function getBookMockup(path) {
   if (!path) return null;
+  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
-  return Object.entries(bookMockupAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? null;
+  return Object.entries(bookMockupAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1]
+    ?? Object.entries(bookCoverAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1]
+    ?? resolveMediaUrl(path);
 }
 
 function sortBooksByYear(bookList) {
@@ -66,7 +70,7 @@ export default function Books() {
       startLeft: rect.left,
       startWidth: rect.width,
       startHeight: rect.height,
-      cover: getBookMockup(book.mockupImage),
+      cover: getBookMockup(book.mockupImage) ?? getBookMockup(book.coverImage),
     });
 
     window.setTimeout(() => setIsOpen(true), 80);

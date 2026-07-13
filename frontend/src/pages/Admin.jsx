@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   aboutIntroParagraphs,
   biography,
@@ -11,7 +12,7 @@ import adminLogo from '../assets/logo/logo_landscape.png';
 import aboutPortraitImage from '../assets/gallery/about1.jpg';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
-  || (['5173', '5174'].includes(window.location.port) ? 'http://127.0.0.1:5000' : '');
+  || (['5173', '5174'].includes(window.location.port) ? `${window.location.protocol}//${window.location.hostname}:5000` : '');
 const APP_BASE = import.meta.env.BASE_URL || '/';
 
 const homepageDefaults = {
@@ -73,6 +74,10 @@ function languageSettingKey(key, language) {
   return localizedSiteSettingKeys.has(key) ? `${key}.${language}` : key;
 }
 
+function translationRecordKey(key, language) {
+  return `translation.${language}.${key}`;
+}
+
 function getSettingRecord(records, key, language) {
   return records.get(languageSettingKey(key, language)) ?? records.get(key);
 }
@@ -91,11 +96,37 @@ function buildDraftFromSettings(records, defaults, keys, language) {
 function buildTranslationDraft(records, language) {
   return translationGroups.reduce((draft, group) => {
     group.keys.forEach((key) => {
-      const setting = records.get(`translation.${language}.${key}`);
+      const setting = records.get(translationRecordKey(key, language)) ?? records.get(key);
       draft[key] = setting?.value ?? translations[language]?.[key] ?? translations.en[key] ?? '';
     });
     return draft;
   }, {});
+}
+
+function addTranslationsToRecords(records, translations, options = {}) {
+  (Array.isArray(translations) ? translations : []).forEach((translation) => {
+    const language = translation.languageCode?.trim().toLowerCase();
+    const existing = records.get(translation.key);
+    if (language) {
+      records.set(translationRecordKey(translation.key, language), translation);
+      if (localizedSiteSettingKeys.has(translation.key)) {
+        records.set(languageSettingKey(translation.key, language), translation);
+      }
+    }
+    if (options.force || (translation.value ?? '') || !existing) records.set(translation.key, translation);
+  });
+}
+
+function setSectionSettingRecord(records, key, language, value) {
+  const record = { key, value };
+  records.set(key, record);
+
+  if (localizedSiteSettingKeys.has(key)) {
+    records.set(languageSettingKey(key, language), {
+      key: languageSettingKey(key, language),
+      value,
+    });
+  }
 }
 
 const siteSettingDefaults = {
@@ -135,6 +166,95 @@ const mediaSettingGroups = [
     title: 'Media Spotlight links',
     fields: [
       ['mediaSpotlightLinks', 'News page Media Spotlight list', 'json-large'],
+    ],
+  },
+];
+
+const poetryHouseDefaults = {
+  heroEyebrow: 'Poetry House',
+  heroTitle: 'The Poetry House',
+  heroSubtitle: 'Theatre & Library',
+  heroContent: 'A dedicated space for poetry performance in Prishtina, founded by Lulzim Tafa and presented through the news reports connected to its opening.',
+  heroCtaLabel: 'Read the opening report',
+  videoEyebrow: 'Video',
+  videoTitle: 'Poetry Theatre Opening',
+  videoContent: 'The video presentation follows the public opening of the Poetry Theatre and the atmosphere around the new cultural space.',
+  videoUrl: 'https://www.youtube.com/embed/SpK74zn2qkU',
+  galleryEyebrow: 'Gallery',
+  galleryTitle: 'Inside the Poetry House',
+  galleryContent: 'Selected moments from the theatre space, arranged as a small visual carousel.',
+  galleryImages: [
+    { src: '/assets/poetry-house/8X4A4854-1920x1280.webp', label: 'Poetry Theatre stage' },
+    { src: '/assets/poetry-house/8X4A4829-1920x1280.webp', label: 'Poetry House audience' },
+    { src: '/assets/poetry-house/5G7A4747-1-1920x1280.webp', label: 'Poetry Theatre opening' },
+  ],
+  newsEyebrow: 'Related News',
+  newsTitle: 'Poetry Theatre Reports',
+  newsContent: 'Articles connected to the inauguration and public story of the Poetry House and Poetry Theatre.',
+  newsEmptyText: 'No related reports have been added yet.',
+  externalNews: [
+    {
+      id: 'korrespodenti-poetry-theatre',
+      source: 'Korrespodenti',
+      title: 'Ne Prishtine Inaugurohet Teatri i Poezise',
+      date: '2025-06-19T16:54:46+01:00',
+      url: 'https://korrespodenti.com/lajme/ne-prishtine-inaugurohet-teatri-i-poezise/',
+      image: '/assets/poetry-house/5G7A4747-1-1920x1280.webp',
+      excerpt: 'External report about the inauguration of the Poetry Theatre in Prishtina.',
+    },
+    {
+      id: 'atv-poetry-theatre',
+      source: 'ATV',
+      title: 'Ne Prishtine Inaugurohet Teatri i Poezise',
+      date: '2025-06-19T13:46:07+00:00',
+      url: 'https://atvlive.tv/ne-prishtine-inaugurohet-teatri-i-poezise/',
+      image: '/assets/poetry-house/8X4A4829-1920x1280.webp',
+      excerpt: 'External report about the inauguration of the Poetry Theatre in Prishtina.',
+    },
+  ],
+};
+
+const poetryHouseGroups = [
+  {
+    title: 'Hero section',
+    description: 'Main Poetry House page title, subtitle, intro copy, and opening-report button text.',
+    fields: [
+      ['heroEyebrow', 'Eyebrow'],
+      ['heroTitle', 'Title'],
+      ['heroSubtitle', 'Subtitle'],
+      ['heroContent', 'Intro paragraph', 'textarea'],
+      ['heroCtaLabel', 'Opening report button'],
+    ],
+  },
+  {
+    title: 'Video section',
+    description: 'Embedded video link and the text beside it.',
+    fields: [
+      ['videoEyebrow', 'Eyebrow'],
+      ['videoTitle', 'Title'],
+      ['videoContent', 'Description', 'textarea'],
+      ['videoUrl', 'Embed video URL'],
+    ],
+  },
+  {
+    title: 'Gallery section',
+    description: 'Carousel heading and image list.',
+    fields: [
+      ['galleryEyebrow', 'Eyebrow'],
+      ['galleryTitle', 'Title'],
+      ['galleryContent', 'Description', 'textarea'],
+      ['galleryImages', 'Gallery images', 'poetryHouseGallery'],
+    ],
+  },
+  {
+    title: 'Related news section',
+    description: 'Heading, empty state, and external news cards shown after site news.',
+    fields: [
+      ['newsEyebrow', 'Eyebrow'],
+      ['newsTitle', 'Title'],
+      ['newsContent', 'Description', 'textarea'],
+      ['newsEmptyText', 'Empty state text'],
+      ['externalNews', 'External news cards', 'poetryHouseExternalNews'],
     ],
   },
 ];
@@ -191,7 +311,6 @@ const moduleConfigs = [
       ['relatedSourcesJson', 'Related source JSON', 'textarea'],
       ['body', 'Article body', 'richtext'],
       ['isExternal', 'External article', 'checkbox'],
-      ['isFeatured', 'Featured', 'checkbox'],
       ['hiddenFromList', 'Hide duplicate', 'checkbox'],
     ],
   },
@@ -216,7 +335,6 @@ const moduleConfigs = [
       images: [],
     },
     fields: [
-      ['slug', 'Slug'],
       ['title', 'Title'],
       ['category', 'Category'],
       ['year', 'Year', 'number'],
@@ -225,8 +343,6 @@ const moduleConfigs = [
       ['description', 'Description', 'textarea'],
       ['coverImagePath', 'Cover image'],
       ['mockupImagePath', 'Mockup image'],
-      ['displayOrder', 'Order', 'number'],
-      ['isFeatured', 'Featured', 'checkbox'],
     ],
   },
   {
@@ -249,7 +365,6 @@ const moduleConfigs = [
       ['title', 'Title'],
       ['poemLanguageId', 'Language', 'poemLanguage'],
       ['body', 'Poem body', 'textarea'],
-      ['isFeatured', 'Featured', 'checkbox'],
     ],
   },
   {
@@ -271,16 +386,10 @@ const moduleConfigs = [
       displayOrder: 0,
     },
     fields: [
-      ['slug', 'Slug'],
       ['title', 'Title'],
-      ['type', 'Type'],
-      ['url', 'URL'],
-      ['filename', 'Local filename'],
-      ['thumbnailImagePath', 'Thumbnail image'],
-      ['previewFit', 'Preview fit'],
-      ['previewTime', 'Preview time', 'number'],
-      ['displayOrder', 'Order', 'number'],
-      ['isFeatured', 'Featured', 'checkbox'],
+      ['type', 'Type', 'videoPoetryType'],
+      ['url', 'YouTube link', 'videoPoetryUrl'],
+      ['url', 'Local video', 'videoPoetryUpload'],
     ],
   },
   {
@@ -297,7 +406,6 @@ const moduleConfigs = [
       location: '',
       iconPath: '',
       certificateImagePath: '',
-      layout: 'landscape',
       isFeatured: false,
       displayOrder: 0,
     },
@@ -308,9 +416,6 @@ const moduleConfigs = [
       ['location', 'Location'],
       ['iconPath', 'Icon', 'awardIcon'],
       ['certificateImagePath', 'Certificate image'],
-      ['layout', 'Layout'],
-      ['displayOrder', 'Order', 'number'],
-      ['isFeatured', 'Featured', 'checkbox'],
     ],
   },
   {
@@ -323,8 +428,6 @@ const moduleConfigs = [
     fields: [
       ['imagePath', 'Image'],
       ['caption', 'Caption'],
-      ['displayOrder', 'Order', 'number'],
-      ['isFeatured', 'Featured', 'checkbox'],
     ],
   },
   {
@@ -337,8 +440,7 @@ const moduleConfigs = [
     fields: [
       ['quote', 'Quote', 'textarea'],
       ['authorName', 'Author'],
-      ['authorTitle', 'Title'],
-      ['isFeatured', 'Featured', 'checkbox'],
+      ['authorTitle', 'Location'],
     ],
   },
   {
@@ -358,13 +460,23 @@ const moduleConfigs = [
     label: 'Media Links',
     icon: 'M',
   },
+  {
+    key: 'poetry-house',
+    label: 'Poetry House',
+    icon: 'P',
+  },
+  {
+    key: 'edit-user',
+    label: 'Edit User',
+    icon: 'U',
+  },
 ];
 
 const moduleNavGroups = [
   {
     title: 'Website Text & Settings',
     description: 'Main page copy, labels, biography, and site-wide text.',
-    moduleKeys: ['home', 'page-text', 'settings', 'media-links'],
+    moduleKeys: ['home', 'page-text', 'settings', 'media-links', 'poetry-house'],
   },
   {
     title: 'Content Collections',
@@ -378,6 +490,7 @@ const moduleDescriptions = {
   'page-text': 'Translate fixed page labels: menus, section titles, buttons, search labels, and empty states.',
   settings: 'Edit biography, About page paragraphs, quick facts, and shared site information.',
   'media-links': 'Edit the Media Spotlight links shown on the News page.',
+  'poetry-house': 'Edit the Poetry House page hero, video, gallery, and related external reports.',
   news: 'Manage news and interview articles. Switch to ALB to translate existing article text.',
   books: 'Manage book records. Switch to ALB to translate book titles and descriptions.',
   poems: 'Manage written poems. Switch to ALB to translate poem title, excerpt, and body.',
@@ -385,9 +498,10 @@ const moduleDescriptions = {
   awards: 'Manage awards. Switch to ALB to translate award title, description, and location.',
   gallery: 'Manage gallery images and captions. Switch to ALB to translate captions.',
   testimonials: 'Manage testimonials. Switch to ALB to translate quotes and author details.',
+  'edit-user': 'Update the admin name, login username, and password requirements.',
 };
 
-const modulesWithoutAdminLanguageSwitch = new Set(['poems']);
+const modulesWithoutAdminLanguageSwitch = new Set(['poems', 'edit-user']);
 
 function getModuleConfig(key) {
   return moduleConfigs.find((config) => config.key === key);
@@ -485,7 +599,7 @@ const homepageContentSections = [
   {
     title: 'Hero text',
     description: 'This is the first visible block on the public homepage.',
-    fields: ['logo', 'subtitle', 'heroTitle', 'heroText', 'location'],
+    fields: ['logo', 'subtitle', 'heroText', 'location'],
     translationKeys: ['home.exploreBooks', 'home.readPoetry'],
   },
   {
@@ -534,7 +648,6 @@ const homeBookMockups = [
 
 const adminContentTranslationFields = {
   books: ['title', 'category', 'location', 'summary', 'description'],
-  poems: ['title', 'excerpt', 'body'],
   news: ['title', 'category', 'excerpt', 'body', 'galleryImagesJson', 'relatedSourcesJson'],
   awards: ['title', 'description', 'location'],
   gallery: ['caption'],
@@ -552,7 +665,7 @@ function applyAdminContentTranslations(collection, item, records, language) {
   const fields = adminContentTranslationFields[collection] ?? [];
   const translatedFields = fields.reduce((nextFields, field) => {
     const translatedRecord = records.get(contentTranslationKey(collection, item.id, field, language));
-    return translatedRecord ? { ...nextFields, [field]: translatedRecord.value ?? '' } : nextFields;
+    return translatedRecord && translatedRecord.value ? { ...nextFields, [field]: translatedRecord.value } : nextFields;
   }, {});
 
   return Object.keys(translatedFields).length ? { ...item, ...translatedFields } : item;
@@ -695,7 +808,6 @@ function HomepageSectionPreview({ type, draft, translationDraft, language, previ
         <div>
           <p>{draft.subtitle || text('home.subtitle')}</p>
           <h3>{draft.logo || 'Lulzim Tafa'}</h3>
-          {draft.heroTitle ? <strong>{draft.heroTitle}</strong> : null}
           <span>{draft.heroText || text('home.intro')}</span>
           {draft.location ? <small>{draft.location}</small> : null}
         </div>
@@ -893,6 +1005,7 @@ const bookAssetModules = import.meta.glob('../assets/books/*', { eager: true, qu
 const mockupAssetModules = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
 const backgroundAssetModules = import.meta.glob('../assets/backgrounds/*', { eager: true, query: '?url', import: 'default' });
 const decorativeAssetModules = import.meta.glob('../assets/decorative/*', { eager: true, query: '?url', import: 'default' });
+const poetryHouseAssetModules = import.meta.glob('../assets/poetry-house/*', { eager: true, query: '?url', import: 'default' });
 const awardIconAssetModules = import.meta.glob('../assets/decorative/award-icon-*.png', { eager: true, query: '?url', import: 'default' });
 
 const awardIconOptions = Object.entries(awardIconAssetModules)
@@ -1086,8 +1199,51 @@ function galleryImagesToPayload(rows) {
 }
 
 function sortNewestAdminItems(configKey, list) {
-  if (!['poems', 'gallery', 'testimonials'].includes(configKey)) return list;
-  return [...list].sort((first, second) => (Number(second.id) || 0) - (Number(first.id) || 0));
+  if (configKey === 'gallery') {
+    const numericOrders = list
+      .map((item) => Number(item?.displayOrder))
+      .filter(Number.isFinite);
+    const hasManualOrder = numericOrders.length === list.length && new Set(numericOrders).size > 1;
+
+    if (!hasManualOrder) {
+      return [...list]
+        .map((item, index) => ({ item, index }))
+        .sort((first, second) => {
+          const secondId = Number(second.item?.id);
+          const firstId = Number(first.item?.id);
+          const hasNumericIds = Number.isFinite(secondId) && Number.isFinite(firstId);
+
+          if (hasNumericIds && secondId !== firstId) return secondId - firstId;
+          return second.index - first.index;
+        })
+        .map(({ item }) => item);
+    }
+
+    return [...list]
+      .map((item, index) => ({ item, index }))
+      .sort((first, second) => {
+        const firstOrder = Number(first.item?.displayOrder);
+        const secondOrder = Number(second.item?.displayOrder);
+        const hasOrders = Number.isFinite(firstOrder) && Number.isFinite(secondOrder);
+
+        if (hasOrders && firstOrder !== secondOrder) return firstOrder - secondOrder;
+        return second.index - first.index;
+      })
+      .map(({ item }) => item);
+  }
+
+  if (!['poems', 'testimonials', 'video-poetry'].includes(configKey)) return list;
+  return [...list]
+    .map((item, index) => ({ item, index }))
+    .sort((first, second) => {
+      const secondId = Number(second.item?.id);
+      const firstId = Number(first.item?.id);
+      const hasNumericIds = Number.isFinite(secondId) && Number.isFinite(firstId);
+
+      if (hasNumericIds && secondId !== firstId) return secondId - firstId;
+      return second.index - first.index;
+    })
+    .map(({ item }) => item);
 }
 
 function paragraphsToText(value) {
@@ -1153,6 +1309,92 @@ function mediaLinksToPayload(rows) {
     .filter((row) => row.name || row.url);
 }
 
+function poetryHouseGalleryToRows(value) {
+  return parseJsonArray(value, poetryHouseDefaults.galleryImages).map((item) => ({
+    src: item.src ?? item.image ?? '',
+    label: item.label ?? item.caption ?? '',
+  }));
+}
+
+function poetryHouseGalleryToPayload(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({ src: String(row.src ?? '').trim(), label: String(row.label ?? '').trim() }))
+    .filter((row) => row.src || row.label);
+}
+
+function poetryHouseExternalNewsToRows(value) {
+  return parseJsonArray(value, poetryHouseDefaults.externalNews).map((item, index) => ({
+    id: item.id ?? `external-news-${index + 1}`,
+    source: item.source ?? '',
+    title: item.title ?? '',
+    date: item.date ?? '',
+    url: item.url ?? '',
+    image: item.image ?? '',
+    excerpt: item.excerpt ?? '',
+  }));
+}
+
+function poetryHouseExternalNewsToPayload(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => ({
+      id: String(row.id || row.title || `external-news-${index + 1}`).trim(),
+      source: String(row.source ?? '').trim(),
+      title: String(row.title ?? '').trim(),
+      date: String(row.date ?? '').trim(),
+      url: String(row.url ?? '').trim(),
+      image: String(row.image ?? '').trim(),
+      excerpt: String(row.excerpt ?? '').trim(),
+    }))
+    .filter((row) => row.title || row.url);
+}
+
+function buildPoetryHouseDraft(sections) {
+  const byKey = new Map((Array.isArray(sections) ? sections : []).map((section) => [section.sectionKey, section]));
+  const getSection = (key) => {
+    const section = byKey.get(key) ?? {};
+    const extra = parseObject(section.extraJson);
+    return { section, extra };
+  };
+  const hero = getSection('hero');
+  const video = getSection('video');
+  const gallery = getSection('gallery');
+  const news = getSection('news');
+
+  return {
+    ...poetryHouseDefaults,
+    heroEyebrow: hero.extra.eyebrow ?? poetryHouseDefaults.heroEyebrow,
+    heroTitle: hero.section.title ?? poetryHouseDefaults.heroTitle,
+    heroSubtitle: hero.section.subtitle ?? poetryHouseDefaults.heroSubtitle,
+    heroContent: hero.section.content ?? poetryHouseDefaults.heroContent,
+    heroCtaLabel: hero.extra.ctaLabel ?? poetryHouseDefaults.heroCtaLabel,
+    videoEyebrow: video.extra.eyebrow ?? poetryHouseDefaults.videoEyebrow,
+    videoTitle: video.section.title ?? poetryHouseDefaults.videoTitle,
+    videoContent: video.section.content ?? poetryHouseDefaults.videoContent,
+    videoUrl: video.extra.videoUrl ?? poetryHouseDefaults.videoUrl,
+    galleryEyebrow: gallery.extra.eyebrow ?? poetryHouseDefaults.galleryEyebrow,
+    galleryTitle: gallery.section.title ?? poetryHouseDefaults.galleryTitle,
+    galleryContent: gallery.section.content ?? poetryHouseDefaults.galleryContent,
+    galleryImages: poetryHouseGalleryToRows(gallery.extra.images ?? poetryHouseDefaults.galleryImages),
+    newsEyebrow: news.extra.eyebrow ?? poetryHouseDefaults.newsEyebrow,
+    newsTitle: news.section.title ?? poetryHouseDefaults.newsTitle,
+    newsContent: news.section.content ?? poetryHouseDefaults.newsContent,
+    newsEmptyText: news.extra.emptyText ?? poetryHouseDefaults.newsEmptyText,
+    externalNews: poetryHouseExternalNewsToRows(news.extra.externalNews ?? poetryHouseDefaults.externalNews),
+  };
+}
+
+function parseObject(value) {
+  if (!value) return {};
+  if (typeof value === 'object' && !Array.isArray(value)) return value;
+
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 function formatSiteSettingValue(key, value) {
   if (!siteSettingStructuredKeys.has(key)) return value ?? '';
 
@@ -1195,6 +1437,7 @@ function resolveAdminImagePath(path) {
       mockupAssetModules,
       backgroundAssetModules,
       decorativeAssetModules,
+      poetryHouseAssetModules,
       awardIconAssetModules,
     ].flatMap((modules) => Object.entries(modules))
       .find(([assetPath]) => assetPath.endsWith(`/${assetFilename}`))?.[1];
@@ -1414,11 +1657,11 @@ function RepeatingRowsEditor({
   }
 
   function addRow() {
-    onChange([...visibleRows, emptyRow]);
+    onChange([...(rows.length > 0 ? rows : []), { ...emptyRow }]);
   }
 
   function removeRow(index) {
-    onChange(visibleRows.filter((_, rowIndex) => rowIndex !== index));
+    onChange((rows.length > 0 ? rows : visibleRows).filter((_, rowIndex) => rowIndex !== index));
   }
 
   return (
@@ -1480,6 +1723,84 @@ function MediaLinksEditor({ value, onChange }) {
       )}
     </RepeatingRowsEditor>
   );
+}
+
+function PoetryHouseGalleryEditor({ value, onChange, onUpload }) {
+  return (
+    <RepeatingRowsEditor
+      rows={Array.isArray(value) ? value : poetryHouseGalleryToRows(value)}
+      emptyRow={{ src: '', label: '' }}
+      onChange={onChange}
+      addLabel="Add gallery image"
+      className="is-media-links-editor"
+    >
+      {({ row, index, updateRow, removeRow }) => (
+        <div className="admin-repeating-row" key={`poetry-house-gallery-${index}`}>
+          <AdminField label="Image path" isWide>
+            <input value={row.src ?? ''} onChange={(event) => updateRow(index, 'src', event.target.value)} placeholder="/assets/poetry-house/photo.webp" />
+            <input className="admin-file-input" type="file" accept="image/*" onChange={(event) => onUpload(event, index, 'galleryImages')} />
+          </AdminField>
+          <AdminField label="Caption" isWide>
+            <input value={row.label ?? ''} onChange={(event) => updateRow(index, 'label', event.target.value)} placeholder="Poetry Theatre stage" />
+          </AdminField>
+          <button type="button" onClick={() => removeRow(index)}>Remove</button>
+        </div>
+      )}
+    </RepeatingRowsEditor>
+  );
+}
+
+function PoetryHouseExternalNewsEditor({ value, onChange, onUpload }) {
+  return (
+    <RepeatingRowsEditor
+      rows={Array.isArray(value) ? value : poetryHouseExternalNewsToRows(value)}
+      emptyRow={{ id: '', source: '', title: '', date: '', url: '', image: '', excerpt: '' }}
+      onChange={onChange}
+      addLabel="Add external report"
+      className="is-media-links-editor"
+    >
+      {({ row, index, updateRow, removeRow }) => (
+        <div className="admin-repeating-row" key={`poetry-house-news-${index}`}>
+          <AdminField label="Source">
+            <input value={row.source ?? ''} onChange={(event) => updateRow(index, 'source', event.target.value)} placeholder="ATV" />
+          </AdminField>
+          <AdminField label="Title" isWide>
+            <input value={row.title ?? ''} onChange={(event) => updateRow(index, 'title', event.target.value)} placeholder="Report title" />
+          </AdminField>
+          <AdminField label="Date">
+            <input value={row.date ?? ''} onChange={(event) => updateRow(index, 'date', event.target.value)} placeholder="2025-06-19T13:46:07+00:00" />
+          </AdminField>
+          <AdminField label="URL" isWide>
+            <input value={row.url ?? ''} onChange={(event) => updateRow(index, 'url', event.target.value)} placeholder="https://..." />
+          </AdminField>
+          <AdminField label="Image path" isWide>
+            <input value={row.image ?? ''} onChange={(event) => updateRow(index, 'image', event.target.value)} placeholder="/assets/poetry-house/photo.webp" />
+            <input className="admin-file-input" type="file" accept="image/*" onChange={(event) => onUpload(event, index, 'externalNews')} />
+          </AdminField>
+          <AdminField label="Excerpt" isWide>
+            <input value={row.excerpt ?? ''} onChange={(event) => updateRow(index, 'excerpt', event.target.value)} placeholder="Short card description" />
+          </AdminField>
+          <button type="button" onClick={() => removeRow(index)}>Remove</button>
+        </div>
+      )}
+    </RepeatingRowsEditor>
+  );
+}
+
+function PoetryHouseFieldEditor({ fieldKey, type, value, onChange, onUpload }) {
+  if (type === 'poetryHouseGallery') {
+    return <PoetryHouseGalleryEditor value={value} onChange={(rows) => onChange(fieldKey, rows)} onUpload={onUpload} />;
+  }
+
+  if (type === 'poetryHouseExternalNews') {
+    return <PoetryHouseExternalNewsEditor value={value} onChange={(rows) => onChange(fieldKey, rows)} onUpload={onUpload} />;
+  }
+
+  if (type === 'textarea') {
+    return <textarea value={value ?? ''} onChange={(event) => onChange(fieldKey, event.target.value)} rows={5} />;
+  }
+
+  return <input value={value ?? ''} onChange={(event) => onChange(fieldKey, event.target.value)} />;
 }
 
 function SiteSettingEditor({ settingKey, type, value, onChange }) {
@@ -1632,11 +1953,8 @@ function NewsEditor({
         <section className="admin-editor-section">
           <h3>External article</h3>
           <div className="admin-form-grid">
-            <AdminField label="Channel URL" isWide>
+            <AdminField label="Article URL" isWide>
               <input value={draft.externalUrl ?? ''} onChange={(event) => updateDraft('externalUrl', event.target.value)} />
-            </AdminField>
-            <AdminField label="Source URL" isWide>
-              <input value={draft.sourceUrl ?? ''} onChange={(event) => updateDraft('sourceUrl', event.target.value)} />
             </AdminField>
           </div>
         </section>
@@ -1663,10 +1981,6 @@ function NewsEditor({
         <h3>Publishing</h3>
         <div className="admin-checkbox-row">
           <label>
-            <input type="checkbox" checked={Boolean(draft.isFeatured)} onChange={(event) => updateDraft('isFeatured', event.target.checked)} />
-            <span>Featured</span>
-          </label>
-          <label>
             <input type="checkbox" checked={Boolean(draft.hiddenFromList)} onChange={(event) => updateDraft('hiddenFromList', event.target.checked)} />
             <span>Hide from public list</span>
           </label>
@@ -1680,7 +1994,7 @@ function toPayload(item) {
   const payload = { ...item };
 
   for (const [key, value] of Object.entries(payload)) {
-    if (key.startsWith('_')) {
+    if (key.startsWith('_') || /^(title|category|location|summary|description)(En|Sq)$/.test(key)) {
       delete payload[key];
       continue;
     }
@@ -1907,11 +2221,13 @@ function ConfirmDialog({ dialog, onCancel, onConfirm }) {
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
   const [activeKey, setActiveKey] = useState(moduleConfigs[0].key);
   const [items, setItems] = useState([]);
   const [draft, setDraft] = useState({});
   const [homeDraft, setHomeDraft] = useState(homepageDefaults);
   const [settingsDraft, setSettingsDraft] = useState(siteSettingDefaults);
+  const [poetryHouseDraft, setPoetryHouseDraft] = useState(poetryHouseDefaults);
   const [translationDraft, setTranslationDraft] = useState({});
   const [homePreviewBooks, setHomePreviewBooks] = useState([]);
   const [adminLanguage, setAdminLanguage] = useState('en');
@@ -1919,12 +2235,24 @@ export default function Admin() {
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [poemLanguageOptions, setPoemLanguageOptions] = useState([]);
   const [poemLanguageFilter, setPoemLanguageFilter] = useState('all');
   const [previewItem, setPreviewItem] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [draggedGalleryId, setDraggedGalleryId] = useState(null);
+  const [pendingGalleryOrder, setPendingGalleryOrder] = useState(null);
+  const [adminUser, setAdminUser] = useState({ displayName: 'Admin', username: 'admin' });
+  const [userDraft, setUserDraft] = useState({
+    displayName: '',
+    username: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [userStatus, setUserStatus] = useState('');
   const activeConfig = useMemo(() => getModuleConfig(activeKey), [activeKey]);
   const selectedId = draft?.id;
   const filteredItems = sortNewestAdminItems(activeConfig.key, items.filter((item) => {
@@ -1969,13 +2297,73 @@ export default function Admin() {
     return 'info';
   }
 
+  function updateUserDraft(key, value) {
+    setUserDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function getPasswordRequirementState(password) {
+    return [
+      ['At least 8 characters', password.length >= 8],
+      ['One uppercase letter', /[A-Z]/.test(password)],
+      ['One lowercase letter', /[a-z]/.test(password)],
+      ['One number', /\d/.test(password)],
+      ['One symbol', /[^A-Za-z0-9]/.test(password)],
+    ];
+  }
+
+  function getPasswordValidationError(password) {
+    if (!password) return null;
+    const missingRequirement = getPasswordRequirementState(password).find(([, isMet]) => !isMet);
+    return missingRequirement ? `Password requirement missing: ${missingRequirement[0].toLowerCase()}.` : null;
+  }
+
   async function request(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, {
+      cache: 'no-store',
+      credentials: 'include',
       headers: options.body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
       ...options,
     });
-    if (!response.ok) throw new Error(await response.text());
-    return response.status === 204 ? null : response.json();
+
+    const responseText = await response.text();
+    let responseData = null;
+
+    if (responseText) {
+      try {
+        responseData = JSON.parse(responseText);
+      } catch {
+        responseData = responseText;
+      }
+    }
+
+    if (!response.ok) {
+      const message = typeof responseData === 'string'
+        ? responseData
+        : responseData?.message || responseData?.error || `Request failed with status ${response.status}.`;
+      const error = new Error(message);
+      error.status = response.status;
+      error.path = path;
+      throw error;
+    }
+
+    return responseData;
+  }
+
+  function getRequestErrorMessage(error) {
+    if (error?.status === 401) {
+      return 'Your admin session expired. Please log in again.';
+    }
+
+    const detail = error?.path ? `${error.path}: ` : '';
+    return `${detail}${error?.message || 'Request failed.'}`;
+  }
+
+  function handleRequestError(error) {
+    if (error?.status === 401) {
+      window.setTimeout(() => navigate('/admin-login', { replace: true }), 900);
+    }
+
+    return getRequestErrorMessage(error);
   }
 
   async function loadItems(config = activeConfig, options = {}) {
@@ -1985,9 +2373,43 @@ export default function Admin() {
       setStatus('');
     }
     try {
+      if (config.key === 'edit-user') {
+        const data = await request('/api/auth/me');
+        const nextUser = {
+          displayName: data.displayName || 'Admin',
+          username: data.username || 'admin',
+        };
+        setAdminUser(nextUser);
+        setUserDraft({
+          displayName: nextUser.displayName,
+          username: nextUser.username,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setUserStatus('');
+        setHomePreviewBooks([]);
+        setItems([]);
+        return;
+      }
+
       if (config.key === 'home') {
-        const [data, books] = await Promise.all([request('/api/site-settings'), request('/api/books')]);
+        const otherLanguage = adminLanguage === 'sq' ? 'en' : 'sq';
+        const [data, otherSiteTranslations, siteTranslations, homeSections, books] = await Promise.all([
+          request('/api/site-settings'),
+          request(`/api/site-translations?lang=${otherLanguage}`),
+          request(`/api/site-translations?lang=${adminLanguage}`),
+          request(`/api/page-sections/home?lang=${adminLanguage}`),
+          request(`/api/books?lang=${adminLanguage}`),
+        ]);
         const records = new Map(data.map((setting) => [setting.key, setting]));
+        addTranslationsToRecords(records, otherSiteTranslations);
+        addTranslationsToRecords(records, siteTranslations, { force: true });
+        const heroSection = homeSections.find((section) => section.sectionKey === 'hero');
+        if (heroSection) {
+          setSectionSettingRecord(records, 'heroTitle', adminLanguage, heroSection.title ?? '');
+          setSectionSettingRecord(records, 'heroText', adminLanguage, heroSection.content ?? '');
+        }
         setHomeSettingRecords(records);
         setHomeDraft(buildDraftFromSettings(records, homepageDefaults, homepageFields.map(([key]) => key), adminLanguage));
         setTranslationDraft(buildTranslationDraft(records, adminLanguage));
@@ -1997,8 +2419,15 @@ export default function Admin() {
       }
 
       if (config.key === 'page-text') {
-        const data = await request('/api/site-settings');
+        const otherLanguage = adminLanguage === 'sq' ? 'en' : 'sq';
+        const [data, otherSiteTranslations, siteTranslations] = await Promise.all([
+          request('/api/site-settings'),
+          request(`/api/site-translations?lang=${otherLanguage}`),
+          request(`/api/site-translations?lang=${adminLanguage}`),
+        ]);
         const records = new Map(data.map((setting) => [setting.key, setting]));
+        addTranslationsToRecords(records, otherSiteTranslations);
+        addTranslationsToRecords(records, siteTranslations, { force: true });
         setHomeSettingRecords(records);
         setTranslationDraft(buildTranslationDraft(records, adminLanguage));
         setHomePreviewBooks([]);
@@ -2007,8 +2436,25 @@ export default function Admin() {
       }
 
       if (config.key === 'settings' || config.key === 'media-links') {
-        const data = await request('/api/site-settings');
+        const otherLanguage = adminLanguage === 'sq' ? 'en' : 'sq';
+        const [data, otherSiteTranslations, siteTranslations, sections] = await Promise.all([
+          request('/api/site-settings'),
+          request(`/api/site-translations?lang=${otherLanguage}`),
+          request(`/api/site-translations?lang=${adminLanguage}`),
+          request(`/api/page-sections/${config.key === 'media-links' ? 'media' : 'about'}?lang=${adminLanguage}`),
+        ]);
         const records = new Map(data.map((setting) => [setting.key, setting]));
+        addTranslationsToRecords(records, otherSiteTranslations);
+        addTranslationsToRecords(records, siteTranslations, { force: true });
+        const sectionValues = {
+          'aboutIntroParagraphs': sections.find((section) => section.sectionKey === 'intro')?.content,
+          biography: sections.find((section) => section.sectionKey === 'biography')?.content,
+          quickFacts: sections.find((section) => section.sectionKey === 'quick-facts')?.extraJson,
+          mediaSpotlightLinks: sections.find((section) => section.sectionKey === 'spotlight-links')?.extraJson,
+        };
+        Object.entries(sectionValues).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) setSectionSettingRecord(records, key, adminLanguage, value);
+        });
         setHomeSettingRecords(records);
         setSettingsDraft(buildDraftFromSettings(records, siteSettingDefaults, getSiteSettingKeysForConfig(config.key), adminLanguage));
         setTranslationDraft(buildTranslationDraft(records, adminLanguage));
@@ -2017,10 +2463,30 @@ export default function Admin() {
         return;
       }
 
+      if (config.key === 'poetry-house') {
+        const sections = await request(`/api/page-sections/poetry-house?lang=${adminLanguage}&fallback=false`);
+        setPoetryHouseDraft(buildPoetryHouseDraft(sections));
+        setHomePreviewBooks([]);
+        setItems([]);
+        return;
+      }
+
+      const collectionEndpoint = adminContentTranslationFields[config.key]
+        ? `${config.endpoint}${config.endpoint.includes('?') ? '&' : '?'}lang=${encodeURIComponent(adminLanguage)}`
+        : config.endpoint;
+      const translationLanguageCodes = config.key === 'books' ? ['en', 'sq'] : [adminLanguage];
       const [data, settings] = adminContentTranslationFields[config.key]
-        ? await Promise.all([request(config.endpoint), request('/api/site-settings')])
-        : [await request(config.endpoint), []];
-      const records = new Map(settings.map((setting) => [setting.key, setting]));
+        ? await Promise.all([
+            request(collectionEndpoint),
+            Promise.all(translationLanguageCodes.map((languageCode) => (
+              request(`/api/content-translations?collection=${config.key}&lang=${languageCode}`)
+            ))).then((groups) => groups.flat()),
+          ])
+        : [await request(collectionEndpoint), []];
+      const records = new Map(settings.flatMap((translation) => Object.entries(translation.fields ?? {}).map(([field, value]) => [
+        contentTranslationKey(config.key, translation.parentId, field, translation.languageCode ?? adminLanguage),
+        { value },
+      ])));
       if (adminContentTranslationFields[config.key]) {
         setHomeSettingRecords(records);
       }
@@ -2077,6 +2543,28 @@ export default function Admin() {
         }
       }
 
+      if (activeConfig.key === 'video-poetry') {
+        const nextType = String(nextDraft.type || '').toLowerCase();
+
+        if (key === 'type') {
+          if (nextType === 'youtube') {
+            nextDraft.filename = '';
+            nextDraft.thumbnailImagePath = getYouTubeThumbnailUrl(nextDraft.url) || '';
+          }
+
+          if (nextType === 'local') {
+            nextDraft.thumbnailImagePath = '';
+            nextDraft.filename = '';
+            nextDraft.previewTime = nextDraft.previewTime || '';
+          }
+        }
+
+        if (nextType === 'youtube' && key === 'url') {
+          nextDraft.thumbnailImagePath = getYouTubeThumbnailUrl(value) || '';
+          nextDraft.filename = '';
+        }
+      }
+
       return nextDraft;
     });
   }
@@ -2100,6 +2588,7 @@ export default function Admin() {
     setPreviewItem(null);
     setIsModalOpen(false);
     setIsSlugEdited(false);
+    setUserStatus('');
   }
 
   function updateHomeDraft(key, value) {
@@ -2108,6 +2597,10 @@ export default function Admin() {
 
   function updateSettingsDraft(key, value) {
     setSettingsDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function updatePoetryHouseDraft(key, value) {
+    setPoetryHouseDraft((current) => ({ ...current, [key]: value }));
   }
 
   function updateTranslationDraft(key, value) {
@@ -2143,20 +2636,76 @@ export default function Admin() {
     });
   }
 
+  async function saveSiteTranslationRecord(key, language, value) {
+    await request('/api/site-translations', {
+      method: 'POST',
+      body: JSON.stringify({
+        key,
+        languageCode: language,
+        value: value ?? '',
+      }),
+    });
+  }
+
+  async function saveContentTranslationRecord(collection, parentId, language, fields) {
+    await request('/api/content-translations', {
+      method: 'POST',
+      body: JSON.stringify({
+        collection,
+        parentId: String(parentId),
+        languageCode: language,
+        fields,
+      }),
+    });
+  }
+
+  async function savePageSectionTranslation(pageKey, sectionKey, language, fields) {
+    await request(`/api/page-sections/${pageKey}/${sectionKey}/translations`, {
+      method: 'POST',
+      body: JSON.stringify({
+        languageCode: language,
+        title: fields.title ?? null,
+        subtitle: fields.subtitle ?? null,
+        content: fields.content ?? null,
+        extraJson: fields.extraJson ?? null,
+      }),
+    });
+  }
+
+  async function refreshAfterMutation(successMessage, config = activeConfig) {
+    setStatus(successMessage);
+    try {
+      await loadItems(config, { preserveStatus: true });
+      setStatus(successMessage);
+    } catch (error) {
+      setStatus(`${successMessage} Refresh failed: ${error.message}`);
+    }
+  }
+
   async function saveHomepage(event) {
     event.preventDefault();
     setStatus(`Saving homepage (${adminLanguage.toUpperCase()})...`);
 
     try {
+      const saveRequests = [];
       for (const [key, value] of Object.entries(homeDraft)) {
-        await saveSettingRecord(languageSettingKey(key, adminLanguage), value);
+        if (key === 'heroTitle' || key === 'heroText') continue;
+        if (localizedSiteSettingKeys.has(key)) {
+          saveRequests.push(saveSiteTranslationRecord(key, adminLanguage, value));
+          continue;
+        }
+        saveRequests.push(saveSettingRecord(languageSettingKey(key, adminLanguage), value));
       }
+      saveRequests.push(savePageSectionTranslation('home', 'hero', adminLanguage, {
+        title: homeDraft.heroTitle ?? '',
+        content: homeDraft.heroText ?? '',
+      }));
       for (const key of homepageTranslationKeys) {
-        await saveSettingRecord(`translation.${adminLanguage}.${key}`, translationDraft[key] ?? '');
+        saveRequests.push(saveSiteTranslationRecord(key, adminLanguage, translationDraft[key] ?? ''));
       }
+      await Promise.all(saveRequests);
 
-      setStatus(`Homepage saved for ${adminLanguage.toUpperCase()}.`);
-      await loadItems(activeConfig);
+      await refreshAfterMutation(`Homepage saved for ${adminLanguage.toUpperCase()}.`);
     } catch (error) {
       setStatus(`Homepage save failed: ${error.message}`);
     }
@@ -2167,19 +2716,36 @@ export default function Admin() {
     setStatus(`Saving site settings (${adminLanguage.toUpperCase()})...`);
 
     try {
+      const saveRequests = [];
       for (const key of getSiteSettingKeysForConfig(activeConfig.key)) {
         const value = settingsDraft[key];
         const serializedValue = serializeSiteSettingValue(key, value);
-        await saveSettingRecord(languageSettingKey(key, adminLanguage), serializedValue);
+        if (key === 'aboutIntroParagraphs') {
+          saveRequests.push(savePageSectionTranslation('about', 'intro', adminLanguage, { content: serializedValue }));
+          continue;
+        }
+        if (key === 'biography') {
+          saveRequests.push(savePageSectionTranslation('about', 'biography', adminLanguage, { content: serializedValue }));
+          continue;
+        }
+        if (key === 'quickFacts') {
+          saveRequests.push(savePageSectionTranslation('about', 'quick-facts', adminLanguage, { extraJson: serializedValue }));
+          continue;
+        }
+        if (key === 'mediaSpotlightLinks') {
+          saveRequests.push(savePageSectionTranslation('media', 'spotlight-links', adminLanguage, { extraJson: serializedValue }));
+          continue;
+        }
+        saveRequests.push(saveSettingRecord(languageSettingKey(key, adminLanguage), serializedValue));
       }
       if (activeConfig.key === 'settings') {
         for (const key of aboutTranslationKeys) {
-          await saveSettingRecord(`translation.${adminLanguage}.${key}`, translationDraft[key] ?? '');
+          saveRequests.push(saveSiteTranslationRecord(key, adminLanguage, translationDraft[key] ?? ''));
         }
       }
+      await Promise.all(saveRequests);
 
-      setStatus(`${activeConfig.label} saved for ${adminLanguage.toUpperCase()}.`);
-      await loadItems(activeConfig);
+      await refreshAfterMutation(`${activeConfig.label} saved for ${adminLanguage.toUpperCase()}.`);
     } catch (error) {
       setStatus(`Site settings save failed: ${error.message}`);
     }
@@ -2191,13 +2757,11 @@ export default function Admin() {
 
     try {
       const editableTranslationKeys = new Set(editableTranslationGroups.flatMap((group) => group.keys));
-      for (const [key, value] of Object.entries(translationDraft)) {
-        if (!editableTranslationKeys.has(key)) continue;
-        await saveSettingRecord(`translation.${adminLanguage}.${key}`, value);
-      }
+      await Promise.all(Object.entries(translationDraft)
+        .filter(([key]) => editableTranslationKeys.has(key))
+        .map(([key, value]) => saveSiteTranslationRecord(key, adminLanguage, value)));
 
-      setStatus(`Page text saved for ${adminLanguage.toUpperCase()}.`);
-      await loadItems(activeConfig);
+      await refreshAfterMutation(`Page text saved for ${adminLanguage.toUpperCase()}.`);
     } catch (error) {
       setStatus(`Page text save failed: ${error.message}`);
     }
@@ -2209,20 +2773,23 @@ export default function Admin() {
     try {
       const translatedFields = adminContentTranslationFields[activeConfig.key] ?? [];
 
-      if (adminLanguage !== 'en' && draft.id && translatedFields.length > 0) {
-        for (const field of translatedFields) {
-          await saveSettingRecord(contentTranslationKey(activeConfig.key, draft.id, field, adminLanguage), draft[field] ?? '');
-        }
+      if (activeConfig.key !== 'books' && adminLanguage !== 'en' && draft.id && translatedFields.length > 0) {
+        await saveContentTranslationRecord(activeConfig.key, draft.id, adminLanguage, Object.fromEntries(
+          translatedFields.map((field) => [field, draft[field] ?? ''])
+        ));
 
         setIsModalOpen(false);
-        await loadItems(activeConfig, { preserveStatus: true });
-        setStatus(`${activeConfig.label} translation saved for ${adminLanguage.toUpperCase()}.`);
+        await refreshAfterMutation(`${activeConfig.label} translation saved for ${adminLanguage.toUpperCase()}.`);
         return;
       }
 
       const draftToSave = {
         ...draft,
-        ...(activeConfig.key === 'books' && !draft.slug ? { slug: slugFromText(draft.title || 'book') } : {}),
+        ...(activeConfig.key === 'books'
+          ? {
+              slug: draft.slug || slugFromText(draft.title || 'book'),
+            }
+          : {}),
         ...(activeConfig.key === 'news'
           ? {
               slug: slugFromText(draft.title || draft.slug || 'news'),
@@ -2241,23 +2808,42 @@ export default function Admin() {
               displayOrder: draft.displayOrder ?? items.length,
             }
           : {}),
-        ...(activeConfig.key === 'awards' && !draft.slug ? { slug: slugFromText(draft.title || 'award') } : {}),
+        ...(activeConfig.key === 'video-poetry'
+          ? {
+              slug: draft.slug || slugFromText(draft.title || 'video'),
+              type: String(draft.type || 'youtube').toLowerCase(),
+              filename: String(draft.type || '').toLowerCase() === 'local' && !draft.url ? draft.filename : '',
+              thumbnailImagePath: String(draft.type || '').toLowerCase() === 'youtube'
+                ? getYouTubeThumbnailUrl(draft.url) || draft.thumbnailImagePath
+                : '',
+              displayOrder: draft.displayOrder ?? items.length,
+            }
+          : {}),
+        ...(activeConfig.key === 'awards' ? { slug: draft.slug || slugFromText(draft.title || 'award') } : {}),
       };
       const payload = toPayload(draftToSave);
+      let savedItem = draftToSave;
       if (draft.id) {
         await request(`${activeConfig.endpoint}/${draft.id}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
+        savedItem = { ...draftToSave, id: draft.id };
       } else {
-        await request(activeConfig.endpoint, {
+        savedItem = await request(activeConfig.endpoint, {
           method: 'POST',
           body: JSON.stringify(payload),
         });
       }
+
+      if (translatedFields.length > 0 && savedItem?.id) {
+        await saveContentTranslationRecord(activeConfig.key, savedItem.id, adminLanguage, Object.fromEntries(
+          translatedFields.map((field) => [field, draftToSave[field] ?? ''])
+        ));
+      }
+
       setIsModalOpen(false);
-      await loadItems(activeConfig, { preserveStatus: true });
-      setStatus(activeConfig.key === 'news' ? 'Your news was saved successfully.' : 'Saved.');
+      await refreshAfterMutation(activeConfig.key === 'news' ? 'Your news was saved successfully.' : 'Saved.');
     } catch (error) {
       setStatus(`Save failed: ${error.message}`);
     }
@@ -2285,9 +2871,8 @@ export default function Admin() {
     setStatus('Deleting...');
     try {
       await request(`${activeConfig.endpoint}/${draft.id}`, { method: 'DELETE' });
-      setStatus('Deleted.');
       setIsModalOpen(false);
-      await loadItems(activeConfig);
+      await refreshAfterMutation('Deleted.');
     } catch (error) {
       setStatus(`Delete failed: ${error.message}`);
     }
@@ -2312,9 +2897,8 @@ export default function Admin() {
     setStatus('Deleting...');
     try {
       await request(`${activeConfig.endpoint}/${item.id}`, { method: 'DELETE' });
-      setStatus('Deleted.');
       setPreviewItem(null);
-      await loadItems(activeConfig);
+      await refreshAfterMutation('Deleted.');
     } catch (error) {
       setStatus(`Delete failed: ${error.message}`);
     }
@@ -2329,22 +2913,56 @@ export default function Admin() {
     ));
   }
 
+  async function persistGalleryOrder(nextItems) {
+    try {
+      const galleryItems = sortNewestAdminItems('gallery', nextItems)
+        .map((item, index) => ({ ...item, displayOrder: index }));
+
+      await Promise.all(galleryItems.map((item) => request(`/api/gallery/${item.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(toPayload(item)),
+      })));
+      setStatus('Gallery order saved.');
+    } catch (error) {
+      setStatus(`Gallery order save failed: ${error.message}`);
+      await loadItems(activeConfig);
+    }
+  }
+
+  function moveGalleryItem(targetId) {
+    if (!draggedGalleryId || draggedGalleryId === targetId) return;
+
+    setItems((currentItems) => {
+      const orderedGallery = sortNewestAdminItems('gallery', currentItems);
+      const fromIndex = orderedGallery.findIndex((item) => item.id === draggedGalleryId);
+      const toIndex = orderedGallery.findIndex((item) => item.id === targetId);
+      if (fromIndex < 0 || toIndex < 0) return currentItems;
+
+      const nextOrderedGallery = [...orderedGallery];
+      const [movedItem] = nextOrderedGallery.splice(fromIndex, 1);
+      nextOrderedGallery.splice(toIndex, 0, movedItem);
+
+      const nextItems = nextOrderedGallery.map((item, index) => ({ ...item, displayOrder: index }));
+      setPendingGalleryOrder(nextItems);
+      return nextItems;
+    });
+  }
+
+  function finishGalleryDrag() {
+    setDraggedGalleryId(null);
+    if (!pendingGalleryOrder) return;
+
+    void persistGalleryOrder(pendingGalleryOrder);
+    setPendingGalleryOrder(null);
+  }
+
   async function saveGalleryCaption(item) {
     if (!item.id) return;
 
     setStatus(`Saving caption (${adminLanguage.toUpperCase()})...`);
     try {
-      if (adminLanguage !== 'en') {
-        await saveSettingRecord(contentTranslationKey('gallery', item.id, 'caption', adminLanguage), item.caption ?? '');
-        setStatus(`Caption translation saved for ${adminLanguage.toUpperCase()}.`);
-        return;
-      }
-
-      await request(`/api/gallery/${item.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(toPayload(item)),
-      });
-      setStatus('Caption saved.');
+      await saveContentTranslationRecord('gallery', item.id, adminLanguage, { caption: item.caption ?? '' });
+      await refreshAfterMutation(`Caption saved for ${adminLanguage.toUpperCase()}.`);
     } catch (error) {
       setStatus(`Caption save failed: ${error.message}`);
     }
@@ -2444,6 +3062,11 @@ export default function Admin() {
 
     setStatus('Uploading gallery images...');
     try {
+      await Promise.all(items.map((item) => request(`/api/gallery/${item.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(toPayload({ ...item, displayOrder: Number(item.displayOrder || 0) + files.length })),
+      })));
+
       for (const [index, file] of files.entries()) {
         const formData = new FormData();
         formData.append('file', file);
@@ -2452,15 +3075,19 @@ export default function Admin() {
           body: formData,
         });
 
-        await request('/api/gallery', {
+        const caption = file.name.replace(/\.[^.]+$/, '');
+        const image = await request('/api/gallery', {
           method: 'POST',
           body: JSON.stringify({
             imagePath: data.path,
-            caption: file.name.replace(/\.[^.]+$/, ''),
-            displayOrder: items.length + index,
+            caption,
+            displayOrder: index,
             isFeatured: false,
           }),
         });
+        if (image?.id) {
+          await saveContentTranslationRecord('gallery', image.id, adminLanguage, { caption });
+        }
       }
 
       setStatus('Gallery images uploaded.');
@@ -2485,33 +3112,199 @@ export default function Admin() {
 
   }
 
-  function logoutAdmin() {
-    ['adminToken', 'adminUser', 'authToken', 'lulzim-tafa-admin-token'].forEach((key) => {
-      window.localStorage.removeItem(key);
-      window.sessionStorage.removeItem(key);
-    });
+  async function logoutAdmin() {
+    try {
+      await request('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // The local session should still leave the admin area if logout cannot reach the server.
+    }
+
     window.location.assign(APP_BASE);
+  }
+
+  async function saveUserProfile(event) {
+    event.preventDefault();
+    setUserStatus('');
+
+    if (userDraft.displayName.trim().length < 2) {
+      setUserStatus('Name must be at least 2 characters.');
+      return;
+    }
+
+    if (userDraft.username.trim().length < 3) {
+      setUserStatus('Username must be at least 3 characters.');
+      return;
+    }
+
+    if (!userDraft.currentPassword) {
+      setUserStatus('Current password is required to save changes.');
+      return;
+    }
+
+    if (userDraft.newPassword || userDraft.confirmPassword) {
+      if (userDraft.newPassword !== userDraft.confirmPassword) {
+        setUserStatus('New passwords do not match.');
+        return;
+      }
+
+      const passwordError = getPasswordValidationError(userDraft.newPassword);
+      if (passwordError) {
+        setUserStatus(passwordError);
+        return;
+      }
+    }
+
+    setUserStatus('Saving user...');
+
+    try {
+      const updatedUser = await request('/api/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify({
+          displayName: userDraft.displayName,
+          username: userDraft.username,
+          currentPassword: userDraft.currentPassword,
+          newPassword: userDraft.newPassword || null,
+        }),
+      });
+      const nextUser = {
+        displayName: updatedUser.displayName || userDraft.displayName,
+        username: updatedUser.username || userDraft.username,
+      };
+      setAdminUser(nextUser);
+      setUserDraft({
+        displayName: nextUser.displayName,
+        username: nextUser.username,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setUserStatus('User saved.');
+    } catch (error) {
+      setUserStatus(`User save failed: ${error.message}`);
+    }
+  }
+
+  const adminInitials = adminUser.displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'A';
+
+  function selectModule(key) {
+    switchModule(key);
+    setIsMobileNavOpen(false);
+  }
+
+  async function uploadPoetryHouseFile(event, rowIndex, collectionKey) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    setStatus('Uploading...');
+    try {
+      const data = await request('/api/uploads/poetryhouse', {
+        method: 'POST',
+        body: formData,
+      });
+      setPoetryHouseDraft((current) => {
+        const rows = [...(current[collectionKey] ?? [])];
+        rows[rowIndex] = {
+          ...(rows[rowIndex] ?? {}),
+          [collectionKey === 'externalNews' ? 'image' : 'src']: data.path,
+        };
+        return { ...current, [collectionKey]: rows };
+      });
+      setStatus('Uploaded.');
+    } catch (error) {
+      setStatus(`Upload failed: ${error.message}`);
+    } finally {
+      event.target.value = '';
+    }
+  }
+
+  async function savePoetryHouse(event) {
+    event.preventDefault();
+    setStatus(`Saving Poetry House (${adminLanguage.toUpperCase()})...`);
+
+    try {
+      const sectionsToSave = [
+        ['hero', {
+          title: poetryHouseDraft.heroTitle,
+          subtitle: poetryHouseDraft.heroSubtitle,
+          content: poetryHouseDraft.heroContent,
+          extraJson: JSON.stringify({
+            eyebrow: poetryHouseDraft.heroEyebrow,
+            ctaLabel: poetryHouseDraft.heroCtaLabel,
+          }),
+        }],
+        ['video', {
+          title: poetryHouseDraft.videoTitle,
+          content: poetryHouseDraft.videoContent,
+          extraJson: JSON.stringify({
+            eyebrow: poetryHouseDraft.videoEyebrow,
+            videoUrl: poetryHouseDraft.videoUrl,
+          }),
+        }],
+        ['gallery', {
+          title: poetryHouseDraft.galleryTitle,
+          content: poetryHouseDraft.galleryContent,
+          extraJson: JSON.stringify({
+            eyebrow: poetryHouseDraft.galleryEyebrow,
+            images: poetryHouseGalleryToPayload(poetryHouseDraft.galleryImages),
+          }),
+        }],
+        ['news', {
+          title: poetryHouseDraft.newsTitle,
+          content: poetryHouseDraft.newsContent,
+          extraJson: JSON.stringify({
+            eyebrow: poetryHouseDraft.newsEyebrow,
+            emptyText: poetryHouseDraft.newsEmptyText,
+            externalNews: poetryHouseExternalNewsToPayload(poetryHouseDraft.externalNews),
+          }),
+        }],
+      ];
+
+      await Promise.all(sectionsToSave.map(([sectionKey, fields]) => (
+        savePageSectionTranslation('poetry-house', sectionKey, adminLanguage, fields)
+      )));
+
+      setStatus(`Poetry House saved for ${adminLanguage.toUpperCase()}.`);
+    } catch (error) {
+      setStatus(`Poetry House save failed: ${error.message}`);
+    }
   }
 
   return (
     <main className={`admin-shell${adminLanguage === 'sq' ? ' is-albanian-language' : ''}`}>
-      <aside className="admin-sidebar" aria-label="Admin navigation">
+      <aside className={`admin-sidebar${isMobileNavOpen ? ' is-open' : ''}`} aria-label="Admin navigation">
         <div className="admin-brand">
           <span><img src={adminLogo} alt="Lulzim Tafa" /></span>
           <div>
             <strong>Lulzim Tafa</strong>
             <small>Content Studio</small>
           </div>
+          <button
+            className="admin-nav-toggle"
+            type="button"
+            aria-expanded={isMobileNavOpen}
+            aria-controls="admin-mobile-navigation"
+            onClick={() => setIsMobileNavOpen((isOpen) => !isOpen)}
+          >
+            <span aria-hidden="true">{isMobileNavOpen ? '×' : '☰'}</span>
+            Menu
+          </button>
         </div>
 
-        <nav className="admin-tabs" aria-label="Admin modules">
+        <nav className="admin-tabs" id="admin-mobile-navigation" aria-label="Admin modules">
           <p>Manage</p>
           {moduleNavGroups.map((group) => (
             <div className="admin-nav-group" key={group.title}>
-              <div className="admin-nav-group-heading">
+              {/* <div className="admin-nav-group-heading">
                 <strong>{group.title}</strong>
                 <small>{group.description}</small>
-              </div>
+              </div> */}
               {group.moduleKeys.map((key) => {
                 const config = getModuleConfig(key);
                 if (!config) return null;
@@ -2521,7 +3314,7 @@ export default function Admin() {
                     key={config.key}
                     type="button"
                     className={config.key === activeKey ? 'is-active' : ''}
-                    onClick={() => switchModule(config.key)}
+                    onClick={() => selectModule(config.key)}
                   >
                     <span aria-hidden="true">{config.icon}</span>
                     {config.label}
@@ -2533,11 +3326,12 @@ export default function Admin() {
         </nav>
 
         <div className="admin-sidebar-footer">
-          <span>AS</span>
+          <span>{adminInitials}</span>
           <div>
-            <strong>Ardian Sallauka</strong>
-            <small>Admin account</small>
+            <strong>{adminUser.displayName}</strong>
+            <small>{adminUser.username}</small>
           </div>
+          <button type="button" onClick={() => selectModule('edit-user')}>Edit User</button>
           <button type="button" onClick={logoutAdmin}>Log out</button>
         </div>
       </aside>
@@ -2549,7 +3343,7 @@ export default function Admin() {
             <h1>{activeConfig.key === 'news' && isModalOpen ? (draft.id ? 'Edit News' : 'Add News') : activeConfig.label}</h1>
             <span>{moduleDescriptions[activeConfig.key] || 'Review current records, then edit or add content.'}</span>
           </div>
-          {!['home', 'settings', 'page-text', 'media-links'].includes(activeConfig.key) && !(activeConfig.key === 'news' && isModalOpen) && (
+          {!['home', 'settings', 'page-text', 'media-links', 'poetry-house', 'edit-user'].includes(activeConfig.key) && !(activeConfig.key === 'news' && isModalOpen) && (
             <div className="admin-topbar-actions">
             <label aria-label="Search admin records">
               <input type="search" placeholder="Search..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
@@ -2579,7 +3373,81 @@ export default function Admin() {
           </div>
         ) : null}
 
-        {activeConfig.key === 'home' ? (
+        {activeConfig.key === 'edit-user' ? (
+          <form className="admin-user-editor" onSubmit={saveUserProfile}>
+            <section className="admin-settings-section">
+              <h2>Admin account</h2>
+              <p className="admin-section-help">Changes to username or password require the current password.</p>
+              <div className="admin-form-grid">
+                <label>
+                  <span>Name</span>
+                  <input
+                    autoComplete="name"
+                    value={userDraft.displayName}
+                    onChange={(event) => updateUserDraft('displayName', event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Login username</span>
+                  <input
+                    autoComplete="username"
+                    value={userDraft.username}
+                    onChange={(event) => updateUserDraft('username', event.target.value)}
+                  />
+                </label>
+                <label className="is-wide">
+                  <span>Current password</span>
+                  <input
+                    autoComplete="current-password"
+                    type="password"
+                    value={userDraft.currentPassword}
+                    onChange={(event) => updateUserDraft('currentPassword', event.target.value)}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="admin-settings-section">
+              <h2>Password</h2>
+              <p className="admin-section-help">Leave the new password fields empty if you only want to update the name or username.</p>
+              <div className="admin-form-grid">
+                <label>
+                  <span>New password</span>
+                  <input
+                    autoComplete="new-password"
+                    type="password"
+                    value={userDraft.newPassword}
+                    onChange={(event) => updateUserDraft('newPassword', event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Confirm new password</span>
+                  <input
+                    autoComplete="new-password"
+                    type="password"
+                    value={userDraft.confirmPassword}
+                    onChange={(event) => updateUserDraft('confirmPassword', event.target.value)}
+                  />
+                </label>
+                <div className="admin-password-requirements is-wide">
+                  {getPasswordRequirementState(userDraft.newPassword).map(([label, isMet]) => (
+                    <span className={isMet ? 'is-met' : ''} key={label}>{label}</span>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {userStatus ? (
+              <div className={`admin-status is-${getStatusTone(userStatus)}`} role="status" aria-live="polite">
+                <p>{userStatus}</p>
+              </div>
+            ) : null}
+
+            <div className="admin-settings-actions">
+              <button className="admin-button is-save" type="submit">Save user</button>
+            </div>
+          </form>
+        ) : activeConfig.key === 'home' ? (
           <form className="admin-homepage-editor" onSubmit={saveHomepage}>
             <HomepagePreview draft={homeDraft} translationDraft={translationDraft} language={adminLanguage} />
 
@@ -2708,6 +3576,32 @@ export default function Admin() {
             ))}
             <div className="admin-settings-actions">
               <button className="admin-button is-save" type="submit"><span aria-hidden="true">✓</span>Save page text</button>
+            </div>
+          </form>
+        ) : activeConfig.key === 'poetry-house' ? (
+          <form className="admin-settings-editor" onSubmit={savePoetryHouse}>
+            {poetryHouseGroups.map((group) => (
+              <section className="admin-settings-section" key={group.title}>
+                <h2>{group.title}</h2>
+                <p className="admin-section-help">{group.description}</p>
+                <div className="admin-form-grid">
+                  {group.fields.map(([key, label, type = 'text']) => (
+                    <div key={key} className={`admin-setting-field${type.includes('textarea') || type.includes('poetryHouse') ? ' is-wide' : ''}`}>
+                      <span>{label}</span>
+                      <PoetryHouseFieldEditor
+                        fieldKey={key}
+                        type={type}
+                        value={poetryHouseDraft[key]}
+                        onChange={updatePoetryHouseDraft}
+                        onUpload={uploadPoetryHouseFile}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+            <div className="admin-settings-actions">
+              <button className="admin-button is-save" type="submit">Save Poetry House</button>
             </div>
           </form>
         ) : activeConfig.key === 'settings' || activeConfig.key === 'media-links' ? (
@@ -2853,7 +3747,26 @@ export default function Admin() {
                       </div>
                     </article>
                   ) : activeConfig.key === 'gallery' ? (
-                    <article key={item.id} className="admin-gallery-record-card">
+                    <article
+                      key={item.id}
+                      className={`admin-gallery-record-card${draggedGalleryId === item.id ? ' is-dragging' : ''}`}
+                      draggable
+                      onDragStart={(event) => {
+                        setDraggedGalleryId(item.id);
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/plain', String(item.id));
+                      }}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = 'move';
+                        moveGalleryItem(item.id);
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        finishGalleryDrag();
+                      }}
+                      onDragEnd={finishGalleryDrag}
+                    >
                       <div className="admin-gallery-record-image">
                         <AdminGalleryImage item={item} />
                       </div>
@@ -2922,62 +3835,92 @@ export default function Admin() {
                   </div>
 
                   <div className="admin-form-grid">
-                    {activeConfig.fields.map(([key, label, type = 'text']) => (
-                      <label key={key} className={type === 'textarea' || type === 'richtext' ? 'is-wide' : ''}>
-                        <span>{label}</span>
-                        {type === 'checkbox' ? (
-                          <input
-                            type="checkbox"
-                            checked={Boolean(draft[key])}
-                            onChange={(event) => updateField(key, event.target.checked)}
-                          />
-                        ) : type === 'textarea' ? (
-                          <textarea value={draft[key] ?? ''} onChange={(event) => updateField(key, event.target.value)} rows={5} />
-                        ) : type === 'richtext' ? (
-                          <RichTextEditor value={draft[key] ?? ''} onChange={(value) => updateField(key, value)} />
-                        ) : type === 'poemLanguage' ? (
-                          <select
-                            value={draft[key] ?? ''}
-                            onChange={(event) => updateField(key, Number(event.target.value) || '')}
-                          >
-                            <option value="">Choose language</option>
-                            {poemLanguageOptions.map((language) => (
-                              <option key={language.id} value={language.id}>{language.name}</option>
-                            ))}
-                          </select>
-                        ) : type === 'awardIcon' ? (
-                          <div className="admin-award-icon-field">
-                            <button
-                              className={!draft[key] ? 'is-selected' : ''}
-                              type="button"
-                              onClick={() => updateField(key, '')}
+                    {activeConfig.fields.map(([key, label, type = 'text']) => {
+                      const videoPoetryType = String(draft.type || 'youtube').toLowerCase();
+                      if (type === 'videoPoetryUrl' && videoPoetryType !== 'youtube') return null;
+                      if (type === 'videoPoetryUpload' && videoPoetryType !== 'local') return null;
+
+                      return (
+                        <label key={`${key}-${type}`} className={type === 'textarea' || type === 'richtext' || type === 'videoPoetryUpload' ? 'is-wide' : ''}>
+                          <span>{label}</span>
+                          {type === 'checkbox' ? (
+                            <input
+                              type="checkbox"
+                              checked={Boolean(draft[key])}
+                              onChange={(event) => updateField(key, event.target.checked)}
+                            />
+                          ) : type === 'textarea' ? (
+                            <textarea value={draft[key] ?? ''} onChange={(event) => updateField(key, event.target.value)} rows={5} />
+                          ) : type === 'richtext' ? (
+                            <RichTextEditor value={draft[key] ?? ''} onChange={(value) => updateField(key, value)} />
+                          ) : type === 'poemLanguage' ? (
+                            <select
+                              value={draft[key] ?? ''}
+                              onChange={(event) => updateField(key, Number(event.target.value) || '')}
                             >
-                              <span>No icon</span>
-                            </button>
-                            {awardIconOptions.map((icon) => (
+                              <option value="">Choose language</option>
+                              {poemLanguageOptions.map((language) => (
+                                <option key={language.id} value={language.id}>{language.name}</option>
+                              ))}
+                            </select>
+                          ) : type === 'videoPoetryType' ? (
+                            <select
+                              value={draft[key] || 'youtube'}
+                              onChange={(event) => updateField(key, event.target.value)}
+                            >
+                              <option value="youtube">YouTube</option>
+                              <option value="local">Local</option>
+                            </select>
+                          ) : type === 'videoPoetryUrl' ? (
+                            <input
+                              type="url"
+                              placeholder="https://www.youtube.com/watch?v=..."
+                              value={draft[key] ?? ''}
+                              onChange={(event) => updateField(key, event.target.value)}
+                            />
+                          ) : type === 'videoPoetryUpload' ? (
+                            <>
+                              <input
+                                value={draft[key] ?? ''}
+                                onChange={(event) => updateField(key, event.target.value)}
+                                placeholder="Uploaded video path"
+                              />
+                              <input className="admin-file-input" type="file" accept="video/*" onChange={(event) => uploadFile(event, key)} />
+                            </>
+                          ) : type === 'awardIcon' ? (
+                            <div className="admin-award-icon-field">
                               <button
-                                className={draft[key] === icon.value ? 'is-selected' : ''}
-                                key={icon.value}
+                                className={!draft[key] ? 'is-selected' : ''}
                                 type="button"
-                                onClick={() => updateField(key, icon.value)}
+                                onClick={() => updateField(key, '')}
                               >
-                                <img src={icon.src} alt="" />
-                                <span>{icon.label}</span>
+                                <span>No icon</span>
                               </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <input
-                            type={type}
-                            value={draft[key] ?? ''}
-                            onChange={(event) => updateField(key, type === 'number' ? Number(event.target.value) || '' : event.target.value)}
-                          />
-                        )}
-                        {key.toLowerCase().includes('image') || key.toLowerCase().includes('path') ? (
-                          <input className="admin-file-input" type="file" accept="image/*,video/*" onChange={(event) => uploadFile(event, key)} />
-                        ) : null}
-                      </label>
-                    ))}
+                              {awardIconOptions.map((icon) => (
+                                <button
+                                  className={draft[key] === icon.value ? 'is-selected' : ''}
+                                  key={icon.value}
+                                  type="button"
+                                  onClick={() => updateField(key, icon.value)}
+                                >
+                                  <img src={icon.src} alt="" />
+                                  <span>{icon.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <input
+                              type={type}
+                              value={draft[key] ?? ''}
+                              onChange={(event) => updateField(key, type === 'number' ? Number(event.target.value) || '' : event.target.value)}
+                            />
+                          )}
+                          {type !== 'videoPoetryUpload' && (key.toLowerCase().includes('image') || key.toLowerCase().includes('path')) ? (
+                            <input className="admin-file-input" type="file" accept="image/*,video/*" onChange={(event) => uploadFile(event, key)} />
+                          ) : null}
+                        </label>
+                      );
+                    })}
                   </div>
                 </form>
               </div>

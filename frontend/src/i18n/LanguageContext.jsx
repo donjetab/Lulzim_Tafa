@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 const STORAGE_KEY = 'lulzim-tafa-language';
 const DEFAULT_LANGUAGE = 'en';
 const API_BASE = import.meta.env.VITE_API_BASE_URL
-  || (['5173', '5174'].includes(window.location.port) ? 'http://127.0.0.1:5000' : '');
+  || (['5173', '5174'].includes(window.location.port) ? `${window.location.protocol}//${window.location.hostname}:5000` : '');
 
 export const languageOptions = [
   { code: 'en', label: 'English', shortLabel: 'EN' },
@@ -296,10 +296,14 @@ function normalizeTranslationSettings(settings) {
   const nextTranslations = { en: { ...translations.en }, sq: { ...translations.sq } };
 
   (Array.isArray(settings) ? settings : []).forEach((setting) => {
-    const match = String(setting.key ?? '').match(/^translation\.(en|sq)\.(.+)$/);
-    if (match) {
-      nextTranslations[match[1]][match[2]] = setting.value ?? '';
-    }
+    const language = setting.languageCode ?? setting.LanguageCode;
+    const key = setting.key ?? setting.Key;
+    const value = setting.value ?? setting.Value ?? '';
+
+    if ((language === 'en' || language === 'sq') && key) nextTranslations[language][key] = value;
+
+    const legacyMatch = String(key ?? '').match(/^translation\.(en|sq)\.(.+)$/);
+    if (legacyMatch) nextTranslations[legacyMatch[1]][legacyMatch[2]] = value;
   });
 
   return nextTranslations;
@@ -327,7 +331,7 @@ export function LanguageProvider({ children }) {
 
     let isMounted = true;
 
-    fetch(`${API_BASE}/api/site-settings`)
+    fetch(`${API_BASE}/api/site-translations`)
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Could not load translations'))))
       .then((settings) => {
         if (isMounted) setCmsTranslations(normalizeTranslationSettings(settings));
@@ -343,7 +347,18 @@ export function LanguageProvider({ children }) {
     language,
     setLanguage,
     toggleLanguage: () => setLanguage((currentLanguage) => (currentLanguage === 'en' ? 'sq' : 'en')),
-    t: (key) => cmsTranslations[language]?.[key] ?? cmsTranslations.en[key] ?? translations.en[key] ?? key,
+    t: (key) => {
+      const otherLanguage = language === 'en' ? 'sq' : 'en';
+      const hasCmsValue = Object.prototype.hasOwnProperty.call(cmsTranslations[language] ?? {}, key)
+        || Object.prototype.hasOwnProperty.call(cmsTranslations[otherLanguage] ?? {}, key);
+      const localizedValue = cmsTranslations[language]?.[key];
+      if (localizedValue === '') return '';
+      if (localizedValue) return localizedValue;
+      const fallbackValue = cmsTranslations[otherLanguage]?.[key];
+      if (fallbackValue) return fallbackValue;
+      if (hasCmsValue) return '';
+      return translations[language]?.[key] ?? translations.en[key] ?? key;
+    },
   }), [cmsTranslations, language]);
 
   return (

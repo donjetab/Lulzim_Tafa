@@ -1318,5 +1318,15 @@ export const importedPoems = [
     "sourceUrl": "https://lulzimtafa.al/languages/slovenian/",
     "excerpt": "Ti imaš več",
     "body": "Ti imaš več\nOd vsakega\nSadja\nV vrtu\nČešenj\nV očesu\nNa ustnicah\nIn na prsih"
+  },
+    {
+    "id": 1132,
+    "slug": "kerkimfalje",
+    "title": "KËRKIMFALJE",
+    "language": "Albanian",
+    "featured": false,
+    "sourceUrl": "https://lulzimtafa.al/languages/albanian/",
+    "excerpt": "Më fal",
+    "body": "Më fal,\ns'kam dashtë\n me t'lanë,\nveç kam dashtë \nme provu \npa marrë frymë \nsa po muj me rrnu"
   }
 ];

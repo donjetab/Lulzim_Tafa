@@ -7,7 +7,11 @@ public static class UploadService
         ".jpg",
         ".jpeg",
         ".png",
-        ".webp"
+        ".webp",
+        ".mp4",
+        ".mov",
+        ".webm",
+        ".m4v"
     };
 
     public static async Task<string> SaveAsync(IFormFile file, IWebHostEnvironment environment, string folder)
@@ -15,7 +19,7 @@ public static class UploadService
         var extension = Path.GetExtension(file.FileName);
         if (!AllowedExtensions.Contains(extension))
         {
-            throw new InvalidOperationException("Unsupported image format.");
+            throw new InvalidOperationException("Unsupported file format.");
         }
 
         var uploadsRoot = Path.Combine(environment.WebRootPath ?? "wwwroot", "uploads", folder);

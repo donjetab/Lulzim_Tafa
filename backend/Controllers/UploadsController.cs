@@ -8,7 +8,8 @@ namespace LulzimTafa.Api.Controllers;
 public class UploadsController(IWebHostEnvironment environment) : ControllerBase
 {
     [HttpPost("{folder}")]
-    [RequestSizeLimit(10_000_000)]
+    [RequestSizeLimit(314_572_800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 314_572_800)]
     public async Task<ActionResult<object>> Upload(string folder, IFormFile file)
     {
         if (file.Length == 0) return BadRequest("No file uploaded.");

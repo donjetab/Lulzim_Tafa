@@ -6,8 +6,12 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 export default function Awards() {
   const { language } = useLanguage();
   const { data: awards } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
-  const portraitAwards = awards.filter((award) => award.layout === 'portrait');
-  const landscapeAwards = awards.filter((award) => award.layout !== 'portrait');
+  const awardsWithLayout = awards.map((award, index) => ({
+    ...award,
+    layout: award.layout || (index >= 6 ? 'portrait' : 'landscape'),
+  }));
+  const portraitAwards = awardsWithLayout.filter((award) => award.layout === 'portrait');
+  const landscapeAwards = awardsWithLayout.filter((award) => award.layout !== 'portrait');
 
   return (
     <>

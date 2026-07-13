@@ -931,6 +931,30 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.admin-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-left: auto;
+  min-height: 2.35rem;
+  border: 1px solid rgba(185, 138, 74, 0.24);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  background: var(--ink);
+  color: #fff;
+  font: 900 0.76rem/1 var(--sans);
+  cursor: pointer;
+}
+
+.admin-nav-toggle span {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .admin-tabs {
   display: grid;
   align-content: start;
@@ -1044,6 +1068,144 @@ textarea {
 .admin-sidebar-footer button:focus-visible {
   background: var(--ink);
   color: #fff;
+}
+
+.admin-password-panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(185, 138, 74, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-password-panel label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-password-panel span,
+.admin-password-panel p {
+  margin: 0;
+  color: var(--muted);
+  font: 700 0.72rem/1.35 var(--sans);
+}
+
+.admin-password-panel input {
+  width: 100%;
+  border: 1px solid rgba(185, 138, 74, 0.22);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.6rem 0.7rem;
+}
+
+.admin-password-panel input:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+.admin-password-panel button {
+  border: 0;
+  border-radius: 6px;
+  background: var(--gold);
+  color: #fff;
+  cursor: pointer;
+  font: 900 0.74rem/1 var(--sans);
+  padding: 0.7rem;
+}
+
+.admin-login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    linear-gradient(120deg, rgba(34, 29, 24, 0.72), rgba(84, 55, 28, 0.42)),
+    url('../assets/backgrounds/main-background.png') center / cover;
+}
+
+.admin-login-panel {
+  width: min(100%, 390px);
+  display: grid;
+  gap: 1rem;
+  padding: 1.65rem;
+  border: 1px solid rgba(185, 138, 74, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: 0 24px 70px rgba(22, 18, 14, 0.28);
+}
+
+.admin-login-panel img {
+  width: 190px;
+  max-width: 100%;
+}
+
+.admin-login-panel p,
+.admin-login-panel h1 {
+  margin: 0;
+}
+
+.admin-login-panel p {
+  color: var(--gold-dark);
+  font: 900 0.78rem/1 var(--sans);
+  text-transform: uppercase;
+}
+
+.admin-login-panel h1 {
+  color: var(--ink);
+  font-size: 2rem;
+}
+
+.admin-login-panel label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-login-panel label span {
+  color: var(--muted);
+  font: 800 0.82rem/1 var(--sans);
+}
+
+.admin-login-panel input {
+  width: 100%;
+  border: 1px solid rgba(185, 138, 74, 0.22);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0.78rem 0.85rem;
+}
+
+.admin-login-panel input:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+.admin-login-status {
+  color: #8f1f2c;
+  font-size: 0.85rem;
+}
+
+.admin-route-error {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid rgba(143, 31, 44, 0.18);
+  border-radius: 7px;
+  background: rgba(143, 31, 44, 0.08);
+  color: #8f1f2c;
+  font: 700 0.82rem/1.45 var(--sans);
+  padding: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.admin-login-panel button {
+  min-height: 2.8rem;
+  border: 0;
+  border-radius: 7px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  font: 900 0.82rem/1 var(--sans);
 }
 
 .admin-main {
@@ -1738,6 +1900,12 @@ textarea {
   gap: 1.25rem;
 }
 
+.admin-user-editor {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 860px;
+}
+
 .admin-settings-section {
   display: grid;
   gap: 0.9rem;
@@ -2115,6 +2283,30 @@ textarea {
   margin: 0 1.1rem 1.1rem;
 }
 
+.admin-password-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-password-requirements span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border: 1px solid rgba(17, 24, 32, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
+  font: 800 0.76rem/1 var(--sans);
+  padding: 0.45rem 0.7rem;
+}
+
+.admin-password-requirements span.is-met {
+  border-color: rgba(87, 139, 91, 0.28);
+  background: rgba(87, 139, 91, 0.12);
+  color: #2f6b36;
+}
+
 .admin-settings-actions button {
   justify-self: end;
 }
@@ -2449,6 +2641,21 @@ textarea {
   border: 1px solid rgba(17, 24, 32, 0.07);
   border-radius: 8px;
   background: #fff;
+  cursor: grab;
+  will-change: transform;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.admin-gallery-record-card:hover {
+  border-color: rgba(191, 137, 54, 0.42);
+  box-shadow: 0 14px 32px rgba(17, 24, 32, 0.1);
+  transform: translateY(-1px);
+}
+
+.admin-gallery-record-card.is-dragging {
+  cursor: grabbing;
+  opacity: 0.64;
+  transform: scale(0.98);
 }
 
 .admin-gallery-record-image {
@@ -2722,6 +2929,17 @@ textarea {
   padding: 1.1rem;
   background: #fff;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+}
+
+.admin-modal-panel .admin-action-row {
+  gap: 0.4rem;
+}
+
+.admin-modal-panel .admin-button,
+.admin-dialog-panel .admin-button {
+  min-height: 2.15rem;
+  padding: 0.46rem 0.7rem;
+  font-size: 0.72rem;
 }
 
 .admin-dialog-modal {
@@ -3303,8 +3521,8 @@ textarea {
 @media (max-width: 760px) {
   .admin-shell {
     --admin-sidebar-width: 0px;
-    display: grid;
-    grid-template-columns: 1fr;
+    display: block;
+    min-width: 0;
   }
 
   .admin-sidebar {
@@ -3312,15 +3530,51 @@ textarea {
     width: auto;
     height: auto;
     min-height: 0;
-    padding: 1rem;
+    overflow: visible;
+    gap: 0.9rem;
+    padding: 0.8rem;
+    border-right: 0;
+    border-bottom: 1px solid rgba(185, 138, 74, 0.2);
+    box-shadow: 0 12px 28px rgba(17, 24, 32, 0.08);
+  }
+
+  .admin-brand {
+    min-height: 3.6rem;
+    padding: 0.6rem;
+  }
+
+  .admin-nav-toggle {
+    display: inline-flex;
+  }
+
+  .admin-tabs,
+  .admin-sidebar-footer {
+    display: none;
+  }
+
+  .admin-sidebar.is-open .admin-tabs,
+  .admin-sidebar.is-open .admin-sidebar-footer {
+    display: grid;
   }
 
   .admin-main {
     margin-left: 0;
+    padding: 0.8rem 0.75rem 1.2rem;
   }
 
   .admin-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .admin-nav-group {
+    padding: 0.45rem;
+  }
+
+  .admin-tabs button {
+    min-height: 2.75rem;
+    padding: 0.55rem;
+    overflow-wrap: anywhere;
   }
 
   .admin-tabs p,
@@ -3328,17 +3582,69 @@ textarea {
     grid-column: 1 / -1;
   }
 
+  .admin-sidebar-footer {
+    padding: 0.75rem;
+  }
+
   .admin-topbar,
+  .admin-list-header,
   .admin-editor-header {
     align-items: stretch;
     display: grid;
+    gap: 0.75rem;
+  }
+
+  .admin-topbar h1 {
+    font-size: 1.35rem;
   }
 
   .admin-topbar-actions {
+    display: grid;
+    grid-template-columns: 1fr;
     margin-left: 0;
   }
 
   .admin-topbar-actions input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-language-switch,
+  .admin-topbar-actions button {
+    width: 100%;
+  }
+
+  .admin-language-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-status,
+  .admin-records-panel,
+  .admin-settings-section,
+  .admin-editor {
+    padding: 0.85rem;
+  }
+
+  .admin-workspace {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .admin-list {
+    max-height: 300px;
+  }
+
+  .admin-action-row,
+  .admin-dialog-actions {
+    justify-content: stretch;
+  }
+
+  .admin-action-row .admin-button,
+  .admin-dialog-actions .admin-button,
+  .admin-settings-actions button,
+  .admin-list-header button,
+  .admin-editor-header button {
     width: 100%;
   }
 
@@ -3361,8 +3667,29 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .admin-user-editor {
+    max-width: none;
+  }
+
+  .admin-settings-actions {
+    position: static;
+    display: grid;
+    padding: 0.65rem;
+  }
+
+  .admin-password-requirements span {
+    width: 100%;
+  }
+
   .admin-record-list.is-book-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-record-list.is-card-grid,
+  .admin-record-list.is-poem-grid,
+  .admin-record-list.is-testimonial-grid,
+  .admin-record-list.is-video-grid {
+    grid-template-columns: 1fr;
   }
 
   .admin-record-list.is-gallery-grid {
@@ -3394,6 +3721,120 @@ textarea {
   .admin-repeating-editor.is-media-links-editor .admin-repeating-row > button {
     grid-column: auto;
     grid-row: auto;
+  }
+
+  .admin-modal {
+    align-items: stretch;
+    padding: 0.65rem;
+  }
+
+  .admin-modal-panel,
+  .admin-dialog-panel {
+    width: 100%;
+    max-height: calc(100vh - 1.3rem);
+    padding: 0.85rem;
+  }
+
+  .admin-modal-panel .admin-action-row,
+  .admin-dialog-panel .admin-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .admin-modal-panel .admin-button,
+  .admin-dialog-panel .admin-button {
+    width: auto;
+    min-height: 2rem;
+    padding: 0.42rem 0.62rem;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-sidebar {
+    padding: 0.65rem;
+  }
+
+  .admin-brand {
+    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .admin-brand > span,
+  .admin-sidebar-footer > span {
+    width: 2.35rem;
+  }
+
+  .admin-brand > span {
+    width: 3.8rem;
+  }
+
+  .admin-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs button span {
+    width: 1.85rem;
+  }
+
+  .admin-main {
+    padding-inline: 0.6rem;
+  }
+
+  .admin-topbar,
+  .admin-records-panel,
+  .admin-settings-section,
+  .admin-editor,
+  .admin-list {
+    padding: 0.75rem;
+  }
+
+  .admin-topbar h1 {
+    font-size: 1.18rem;
+    line-height: 1.15;
+  }
+
+  .admin-topbar span,
+  .admin-section-help,
+  .admin-list-header p {
+    font-size: 0.76rem;
+  }
+
+  .admin-record-list.is-book-grid,
+  .admin-record-list.is-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-label-section-header {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-label-section-header::after {
+    justify-self: start;
+  }
+
+  .admin-bio-main-preview,
+  .admin-bio-hero-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-bio-hero-preview img {
+    min-height: 220px;
+  }
+
+  .admin-button {
+    width: 100%;
+    padding-inline: 0.75rem;
+  }
+
+  .admin-modal-panel .admin-button,
+  .admin-dialog-panel .admin-button {
+    width: auto;
+    flex: 0 1 auto;
+  }
+
+  .admin-modal {
+    padding: 0.45rem;
   }
 }
 
@@ -3438,12 +3879,15 @@ textarea {
   place-items: end center;
   width: min(170px, 58vw);
   aspect-ratio: 0.68;
-  padding: 1.4rem 1rem;
+  padding: 0.75rem;
   color: var(--ink);
   font-family: var(--serif);
   font-size: 1.25rem;
   font-weight: 700;
   overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 252, 244, 0.85), rgba(224, 211, 188, 0.45));
+  border-radius: 3px 7px 7px 3px;
+  box-shadow: 0 18px 20px rgba(47, 34, 19, 0.16);
   transition:
     filter 240ms ease,
     transform 240ms ease;
@@ -3454,7 +3898,8 @@ textarea {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 12px rgba(47, 34, 19, 0.2));
 }
 
 .book-cover.large {
@@ -3471,7 +3916,6 @@ textarea {
 
 .book-list-grid .book-cover {
   transform: none;
-  box-shadow: none;
 }
 
 .book-list-grid .book-card:hover,
@@ -5142,6 +5586,7 @@ textarea {
 .poetry-video-detail-page .eyebrow {
   margin: 0 0 0.8rem;
   color: var(--gold-dark);
+  text-align: center;
 }
 
 .poem-grid {
@@ -6767,6 +7212,7 @@ textarea {
 }
 
 .gallery-masonry-card {
+  position: relative;
   display: block;
   width: 100%;
   padding: 0;
@@ -6780,6 +7226,33 @@ textarea {
   content-visibility: auto;
   contain-intrinsic-size: 320px 420px;
   transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.gallery-masonry-card span {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.75rem;
+  left: 0.8rem;
+  z-index: 1;
+  padding: 0.45rem 0.55rem;
+  color: #fff8ea;
+  background: rgba(20, 16, 12, 0.58);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-align: left;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.gallery-masonry-card:hover span,
+.gallery-masonry-card:focus-visible span {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .gallery-masonry-card:hover,
