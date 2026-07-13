@@ -44,9 +44,14 @@ export default function PoemCard({ poem, index, onOpen }) {
   const tilt = ((seed % 7) - 3) * 0.16;
   const offset = isWide ? ((seed + index) % 3) * 0.35 : ((seed + index) % 5) * 0.45;
 
+  const poemPath = `/poetry/${poem.slug}`;
+
   return (
-    <article
+    <Link
       className={isWide ? 'poetry-paper-card poetry-paper-card-wide' : 'poetry-paper-card'}
+      to={poemPath}
+      onClick={onOpen}
+      aria-label={`Read the poem ${poem.title}`}
       style={{
         '--poetry-paper-offset': `${offset}rem`,
         '--poetry-paper-tilt': `${tilt}deg`,
@@ -60,10 +65,10 @@ export default function PoemCard({ poem, index, onOpen }) {
           {preview.lines.map((line, lineIndex) => <p key={`${poem.id}-${lineIndex}`}>{line}</p>)}
           {preview.isTruncated && <p aria-hidden="true">...</p>}
         </div>
-        <Link className="poetry-read-link" to={`/poetry/${poem.slug}`} onClick={onOpen}>
+        <span className="poetry-read-link" aria-hidden="true">
           Read the poem
-        </Link>
+        </span>
       </div>
-    </article>
+    </Link>
   );
 }

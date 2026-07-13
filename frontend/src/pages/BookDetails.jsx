@@ -1,15 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { getBookMockupImage } from '../data/bookImages.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-
-const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
-
-function getBookCover(path) {
-  if (!path) return null;
-  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
-  const filename = path.split('/').pop();
-  return Object.entries(bookCoverAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
-}
 
 export default function BookDetails() {
   const { slug } = useParams();
@@ -19,7 +11,7 @@ export default function BookDetails() {
 
   if (!book) return <section className="section"><h1>Book not found</h1></section>;
 
-  const cover = getBookCover(book.coverImage);
+  const cover = getBookMockupImage(book);
   const meta = [book.category, book.year].filter(Boolean).join(' · ');
 
   return (

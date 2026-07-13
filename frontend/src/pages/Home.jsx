@@ -3,19 +3,10 @@ import { Link } from 'react-router-dom';
 import NewsCard from '../components/NewsCard.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { getBookMockupImage } from '../data/bookImages.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const homeFeaturedBookSlugs = ['antologji-personale', 'ekspozite-me-enderra', 'rivali-i-adamit', 'flirt'];
-
-function getHomeBookPreviewImage(book, siteSettings, index) {
-  return resolveMediaUrl(
-    siteSettings?.[`homeFeaturedBookMockupPath${index + 1}`]
-    || book?.mockupImagePath
-    || book?.coverImagePath
-    || book?.coverImage
-    || ''
-  );
-}
 
 function getRandomPoem(poems) {
   const albanianPoems = poems.filter((poem) => poem.language === 'Albanian');
@@ -122,15 +113,19 @@ export default function Home() {
             />
           </div>
           <div className="home-book-row">
-            {featuredBooks.map((book, index) => (
-              <div className={`home-book-mockup book-tone-${index + 1}`} data-home-animate="book" style={{ '--home-index': index }} key={book.id}>
-                {getHomeBookPreviewImage(book, siteSettings, index) ? (
-                  <img className="home-book-image" src={getHomeBookPreviewImage(book, siteSettings, index)} alt={`${book.title} book mockup`} />
-                ) : (
-                  <span>{book.title}</span>
-                )}
-              </div>
-            ))}
+            {featuredBooks.map((book, index) => {
+              const image = getBookMockupImage(book, { preferHomeMockup: true, siteSettings, index });
+
+              return (
+                <div className={`home-book-mockup book-tone-${index + 1}`} data-home-animate="book" style={{ '--home-index': index }} key={book.id}>
+                  {image ? (
+                    <img className="home-book-image" src={image} alt={`${book.title} book mockup`} />
+                  ) : (
+                    <span>{book.title}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
           <Link className="button-secondary centered-button" to="/books" data-home-animate="fade-up">{t('home.viewAllBooks')}</Link>
         </section>

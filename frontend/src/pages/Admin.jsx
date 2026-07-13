@@ -1125,9 +1125,6 @@ function getHomepagePreviewBookImage(book, draft, index) {
   return resolveAdminImagePath(
     draft?.[`homeFeaturedBookMockupPath${index + 1}`]
     || homeBookMockups[index]
-    || book?.mockupImagePath
-    || book?.coverImagePath
-    || book?.coverImage
     || ''
   );
 }

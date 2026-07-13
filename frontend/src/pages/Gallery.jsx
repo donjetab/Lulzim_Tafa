@@ -4,6 +4,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const galleryAssetModules = import.meta.glob('../assets/gallery/*', { eager: true, query: '?url', import: 'default' });
 const GALLERY_BATCH_SIZE = 18;
+const galleryCardRatios = ['1 / 1.18', '1 / 0.78', '1 / 1.42', '1 / 1', '1 / 1.28', '1 / 0.86'];
 
 function getCaption(index) {
   return `Gallery image ${index + 1}`;
@@ -14,6 +15,10 @@ function resolveGalleryImage(path) {
   if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
   const filename = path.split('/').pop();
   return Object.entries(galleryAssetModules).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
+}
+
+function getGalleryCardRatio(index) {
+  return galleryCardRatios[index % galleryCardRatios.length];
 }
 
 export default function Gallery() {
@@ -113,7 +118,14 @@ export default function Gallery() {
       <section className="gallery-page-section" aria-label="Gallery images">
         <div className="gallery-masonry">
           {visibleGalleryImages.map((image, index) => (
-            <button className="gallery-masonry-card" type="button" onClick={() => setActiveGalleryIndex(index)} key={image.id} aria-label={`Preview ${image.caption}`}>
+            <button
+              className="gallery-masonry-card"
+              type="button"
+              onClick={() => setActiveGalleryIndex(index)}
+              key={image.id}
+              aria-label={`Preview ${image.caption}`}
+              style={{ '--gallery-card-ratio': getGalleryCardRatio(index) }}
+            >
               <img src={image.src} alt={image.caption} loading="lazy" decoding="async" fetchPriority={index < 6 ? 'auto' : 'low'} />
               {image.caption ? <span>{image.caption}</span> : null}
             </button>

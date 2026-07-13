@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
@@ -159,7 +160,26 @@ export default function About() {
     });
   }
 
+  const galleryLightbox = activeGalleryImage ? createPortal(
+    <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label={activeGalleryImage.caption}>
+      <button className="gallery-lightbox-backdrop" type="button" onClick={() => setActiveGalleryIndex(null)} aria-label="Close gallery preview" />
+      <div className="gallery-lightbox-panel">
+        <button className="gallery-lightbox-close" type="button" onClick={() => setActiveGalleryIndex(null)} aria-label="Close gallery preview">x</button>
+        <button className="gallery-lightbox-nav gallery-lightbox-prev" type="button" onClick={() => moveGalleryPreview(-1)} aria-label="Previous image">
+          <span aria-hidden="true" />
+        </button>
+        <img src={activeGalleryImage.src} alt={activeGalleryImage.caption} />
+        <p>{activeGalleryImage.caption}</p>
+        <button className="gallery-lightbox-nav gallery-lightbox-next" type="button" onClick={() => moveGalleryPreview(1)} aria-label="Next image">
+          <span aria-hidden="true" />
+        </button>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
+    <>
     <main className="about-page">
       <section className="about-hero">
         <img className="about-portrait" src={aboutPortrait} alt="Lulzim Tafa speaking at an academic event" />
@@ -262,24 +282,8 @@ export default function About() {
         </div>
       </section>
 
-      {activeGalleryImage && (
-        <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label={activeGalleryImage.caption}>
-          <button className="gallery-lightbox-backdrop" type="button" onClick={() => setActiveGalleryIndex(null)} aria-label="Close gallery preview" />
-          <div className="gallery-lightbox-panel">
-            <button className="gallery-lightbox-close" type="button" onClick={() => setActiveGalleryIndex(null)} aria-label="Close gallery preview">x</button>
-            <button className="gallery-lightbox-nav gallery-lightbox-prev" type="button" onClick={() => moveGalleryPreview(-1)} aria-label="Previous image">
-              <span aria-hidden="true" />
-            </button>
-            <img src={activeGalleryImage.src} alt={activeGalleryImage.caption} />
-            <p>{activeGalleryImage.caption}</p>
-            <button className="gallery-lightbox-nav gallery-lightbox-next" type="button" onClick={() => moveGalleryPreview(1)} aria-label="Next image">
-              <span aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
-
-
     </main>
+    {galleryLightbox}
+    </>
   );
 }

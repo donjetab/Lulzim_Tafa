@@ -1,12 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import BookCard from '../components/BookCard.jsx';
 import PageHero from '../components/PageHero.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
+import { cms, fallbackData, useCmsData } from '../data/api.js';
+import { getBookMockupImage } from '../data/bookImages.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-
-const bookMockupAssets = import.meta.glob('../assets/mockups/*', { eager: true, query: '?url', import: 'default' });
-const bookCoverAssets = import.meta.glob('../assets/books/*', { eager: true, query: '?url', import: 'default' });
 
 const shelfSpineColors = [
   ['#cbc5b9', '#cbc5b9'],
@@ -20,15 +18,6 @@ const shelfSpineColors = [
   ['#a4a4a4', '#a4a4a4'],
   ['#79858d', '#79858d'],
 ];
-
-function getBookMockup(path) {
-  if (!path) return null;
-  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
-  const filename = path.split('/').pop();
-  return Object.entries(bookMockupAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1]
-    ?? Object.entries(bookCoverAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1]
-    ?? resolveMediaUrl(path);
-}
 
 function sortBooksByYear(bookList) {
   return [...bookList].sort((a, b) => {
@@ -53,11 +42,22 @@ export default function Books() {
   const { language, t } = useLanguage();
   const bookRefs = useRef({});
   const { data: books } = useCmsData(() => cms.getBooks(language), fallbackData.books, [language]);
+  const [isMobileShelf, setIsMobileShelf] = useState(false);
   const listedBooks = useMemo(() => sortBooksByYear(books), [books]);
-  const shelfBooks = listedBooks.slice(0, 10);
+  const shelfBooks = listedBooks.slice(0, isMobileShelf ? 6 : 10);
   const [activeBook, setActiveBook] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 700px)');
+    const syncShelfCount = () => setIsMobileShelf(mediaQuery.matches);
+
+    syncShelfCount();
+    mediaQuery.addEventListener('change', syncShelfCount);
+
+    return () => mediaQuery.removeEventListener('change', syncShelfCount);
+  }, []);
 
   function openShelfBook(book) {
     const element = bookRefs.current[book.id];
@@ -70,7 +70,7 @@ export default function Books() {
       startLeft: rect.left,
       startWidth: rect.width,
       startHeight: rect.height,
-      cover: getBookMockup(book.mockupImage) ?? getBookMockup(book.coverImage),
+      cover: getBookMockupImage(book),
     });
 
     window.setTimeout(() => setIsOpen(true), 80);
@@ -135,6 +135,13 @@ export default function Books() {
               </div>
               <div className="shelf-real-book">
                 <div className="shelf-inside-pages">
+                  <div className="shelf-mobile-page">
+                    <p className="eyebrow">{activeBook.year || t('books.yearToConfirm')}</p>
+                    <h2 style={getPreviewTitleStyle(activeBook.title)}>{activeBook.title}</h2>
+                    <p>{activeBook.location || activeBook.category}</p>
+                    <p>{activeBook.summary}</p>
+                    <button type="button" onClick={closeShelfBook}>{t('books.closeBook')}</button>
+                  </div>
                   <div className="shelf-inside-page shelf-inside-page-left">
                     <p className="eyebrow">{activeBook.year || t('books.yearToConfirm')}</p>
                     <h2 style={getPreviewTitleStyle(activeBook.title)}>{activeBook.title}</h2>
