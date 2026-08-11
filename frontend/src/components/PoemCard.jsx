@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink.jsx';
 import paperTape from '../assets/decorative/poetry_1.png';
 import paperFlowers from '../assets/decorative/poetry_2.png';
 import paperClip from '../assets/decorative/poetry_3.png';
 import paperWide from '../assets/decorative/poetry_4.png';
-import paperSeal from '../assets/decorative/poetry_5.png';
+import paperFloral from '../assets/decorative/poetry_6.png';
 
-const portraitPapers = [paperTape, paperFlowers, paperClip, paperSeal];
+const portraitPapers = [paperTape, paperFlowers, paperClip, paperFloral];
 
 function getStableSeed(value) {
   return [...value].reduce((hash, character) => {

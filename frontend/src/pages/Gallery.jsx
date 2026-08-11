@@ -22,7 +22,7 @@ function getGalleryCardRatio(index) {
 }
 
 export default function Gallery() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(null);
   const [visibleCount, setVisibleCount] = useState(GALLERY_BATCH_SIZE);
   const touchStart = useRef(null);
@@ -109,10 +109,10 @@ export default function Gallery() {
   return (
     <main className="gallery-page">
       <section className="gallery-page-hero">
-        <p className="eyebrow">Gallery</p>
-        <h1>Moments from Public and Literary Life</h1>
+        <p className="eyebrow">{t('gallery.eyebrow')}</p>
+        <h1>{t('gallery.title')}</h1>
         <span className="gold-rule" />
-        <p>Photographs from readings, ceremonies, meetings, and cultural appearances.</p>
+        <p>{t('gallery.text')}</p>
       </section>
 
       <section className="gallery-page-section" aria-label="Gallery images">

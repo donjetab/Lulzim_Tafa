@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 

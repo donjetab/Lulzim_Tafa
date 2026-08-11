@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
+import { slugify } from '../utils/slugify.js';
 import NewsCard from '../components/NewsCard.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
@@ -155,7 +156,7 @@ export default function PoetryHouse() {
           <span>{heroContent.subtitle}</span>
           <p>{heroContent.content}</p>
           {featuredArticle && (
-            <Link className="button-primary" to={`/news/${featuredArticle.slug}`}>
+            <Link className="button-primary" to={`/news/${language === 'sq' ? slugify(featuredArticle.title) || featuredArticle.slug : featuredArticle.slug}`}>
               {heroContent.ctaLabel}
             </Link>
           )}

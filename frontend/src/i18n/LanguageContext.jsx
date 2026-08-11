@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getLanguageFromPath, localizePublicPath } from './localizedRoutes.js';
 
 const STORAGE_KEY = 'lulzim-tafa-language';
 const DEFAULT_LANGUAGE = 'en';
@@ -91,6 +93,11 @@ export const translations = {
     'news.openMediaPage': 'Open media page for Lulzim Tafa',
     'news.empty': 'No news found for your search.',
     'news.emptyMedia': 'No media outlets found for your search.',
+    'gallery.eyebrow': 'Gallery',
+    'gallery.title': 'Moments from Public and Literary Life',
+    'gallery.text': 'Photographs from readings, ceremonies, meetings, and cultural appearances.',
+    'awards.eyebrow': 'Awards',
+    'awards.title': 'Awards & Recognition',
   },
   sq: {
     'nav.home': 'Ballina',
@@ -172,6 +179,11 @@ export const translations = {
     'news.openMediaPage': 'Hap faqen mediatike per Lulzim Tafen',
     'news.empty': 'Nuk u gjet asnje lajm per kerkimin tuaj.',
     'news.emptyMedia': 'Nuk u gjet asnje media per kerkimin tuaj.',
+    'gallery.eyebrow': 'Galeria',
+    'gallery.title': 'Momente nga jeta publike dhe letrare',
+    'gallery.text': 'Fotografi nga lexime, ceremoni, takime dhe paraqitje kulturore.',
+    'awards.eyebrow': 'Cmimet',
+    'awards.title': 'Cmimet dhe mirenjohjet',
   },
 };
 
@@ -279,6 +291,21 @@ export const translationGroups = [
     ],
   },
   {
+    title: 'Gallery',
+    keys: [
+      'gallery.eyebrow',
+      'gallery.title',
+      'gallery.text',
+    ],
+  },
+  {
+    title: 'Awards',
+    keys: [
+      'awards.eyebrow',
+      'awards.title',
+    ],
+  },
+  {
     title: 'Footer',
     keys: [
       'footer.description',
@@ -313,11 +340,15 @@ const LanguageContext = createContext(null);
 
 function getInitialLanguage() {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  const urlLanguage = getLanguageFromPath(window.location.pathname);
+  if (urlLanguage) return urlLanguage;
   const savedLanguage = window.localStorage.getItem(STORAGE_KEY);
   return savedLanguage === 'sq' || savedLanguage === 'en' ? savedLanguage : DEFAULT_LANGUAGE;
 }
 
 export function LanguageProvider({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [language, setLanguage] = useState(getInitialLanguage);
   const [cmsTranslations, setCmsTranslations] = useState(translations);
 
@@ -325,6 +356,11 @@ export function LanguageProvider({ children }) {
     window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language === 'sq' ? 'sq' : 'en';
   }, [language]);
+
+  useEffect(() => {
+    const urlLanguage = getLanguageFromPath(location.pathname);
+    if (urlLanguage && urlLanguage !== language) setLanguage(urlLanguage);
+  }, [language, location.pathname]);
 
   useEffect(() => {
     if (!API_BASE) return undefined;
@@ -346,7 +382,11 @@ export function LanguageProvider({ children }) {
   const value = useMemo(() => ({
     language,
     setLanguage,
-    toggleLanguage: () => setLanguage((currentLanguage) => (currentLanguage === 'en' ? 'sq' : 'en')),
+    toggleLanguage: () => {
+      const nextLanguage = language === 'en' ? 'sq' : 'en';
+      const nextPath = localizePublicPath(location.pathname, nextLanguage);
+      navigate(`${nextPath}${location.search}${location.hash}`);
+    },
     t: (key) => {
       const otherLanguage = language === 'en' ? 'sq' : 'en';
       const hasCmsValue = Object.prototype.hasOwnProperty.call(cmsTranslations[language] ?? {}, key)
@@ -359,7 +399,7 @@ export function LanguageProvider({ children }) {
       if (hasCmsValue) return '';
       return translations[language]?.[key] ?? translations.en[key] ?? key;
     },
-  }), [cmsTranslations, language]);
+  }), [cmsTranslations, language, location.hash, location.pathname, location.search, navigate]);
 
   return (
     <LanguageContext.Provider value={value}>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import NewsCard from '../components/NewsCard.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';

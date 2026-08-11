@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink.jsx';
 import { resolveMediaUrl } from '../data/api.js';
 
 const awardAssets = import.meta.glob('../assets/decorative/award-*.png', { eager: true, query: '?url', import: 'default' });

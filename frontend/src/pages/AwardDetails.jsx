@@ -1,4 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
@@ -14,9 +16,14 @@ function getAwardImage(path) {
 export default function AwardDetails() {
   const { slug } = useParams();
   const { language } = useLanguage();
-  const { data: awards } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
+  const { data: awards, isLoading } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
   const award = awards.find((item) => item.slug === slug);
 
+  useEffect(() => {
+    if (award?.title) document.title = `${award.title} | Lulzim Tafa`;
+  }, [award?.title]);
+
+  if (isLoading) return <section className="section award-detail-section"><h1>Loading award...</h1></section>;
   if (!award) return <section className="section award-detail-section"><h1>Award not found</h1></section>;
 
   const meta = [award.year, award.location].filter(Boolean).join(' / ');

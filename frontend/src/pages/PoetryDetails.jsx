@@ -1,4 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
@@ -18,23 +20,31 @@ function getStableSeed(value) {
 export default function PoetryDetails() {
   const { slug } = useParams();
   const { language } = useLanguage();
-  const { data: poems } = useCmsData(() => cms.getPoems(undefined, language), fallbackData.poems, [language]);
+  const { data: poems, isLoading } = useCmsData(() => cms.getPoems(undefined, language), fallbackData.poems, [language]);
   const index = poems.findIndex((item) => item.slug === slug);
   const poem = poems[index];
   const previous = poems[index - 1];
   const next = poems[index + 1];
 
+  useEffect(() => {
+    if (poem?.title) document.title = `${poem.title} | Lulzim Tafa`;
+  }, [poem?.title]);
+
+  if (isLoading) return <section className="section"><h1>Loading poem...</h1></section>;
   if (!poem) return <section className="section"><h1>Poem not found</h1></section>;
 
   const lines = getPoemLines(poem);
   const seed = getStableSeed(`${poem.slug}-${poem.language}-${poem.title}`);
   const longestLine = lines.reduce((longest, line) => Math.max(longest, line.length), 0);
   const isShortPoem = lines.length <= 14;
+  const isMediumPoem = lines.length <= 25;
   const useWideShortPaper = isShortPoem && longestLine > 34;
   const shortPaperVariant = useWideShortPaper ? 5 : (seed % 4) + 1;
   const paperClassName = isShortPoem
     ? `poem-paper poem-paper-short poem-paper-short-${shortPaperVariant}`
-    : 'poem-paper';
+    : isMediumPoem
+      ? 'poem-paper poem-paper-medium'
+      : 'poem-paper';
 
   return (
     <main className="single-poetry-page">

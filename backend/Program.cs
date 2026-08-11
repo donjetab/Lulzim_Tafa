@@ -53,6 +53,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddHostedService<UnusedUploadCleanupService>();
+builder.Services.AddScoped<SeoService>();
 
 var app = builder.Build();
 
@@ -133,9 +134,15 @@ app.Use(async (context, next) =>
 });
 app.MapControllers();
 
+app.MapGet("/robots.txt", (SeoService seo, HttpRequest request) =>
+    Results.Text($"User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: {seo.GetPublicOrigin(request)}/sitemap.xml\n", "text/plain"));
+
+app.MapGet("/sitemap.xml", async (SeoService seo, HttpRequest request) =>
+    Results.Text(await seo.BuildSitemapAsync(seo.GetPublicOrigin(request)), "application/xml"));
+
 if (Directory.Exists(frontendDistPath))
 {
-    app.MapFallback(async context =>
+    app.MapFallback(async (HttpContext context, SeoService seo) =>
     {
         if (context.Request.Path.StartsWithSegments("/api"))
         {
@@ -145,8 +152,10 @@ if (Directory.Exists(frontendDistPath))
             return;
         }
 
-        context.Response.ContentType = "text/html";
-        await context.Response.SendFileAsync(Path.Combine(frontendDistPath, "index.html"));
+        var indexHtml = await File.ReadAllTextAsync(Path.Combine(frontendDistPath, "index.html"));
+        var html = await seo.InjectMetadataAsync(indexHtml, context.Request.Path, seo.GetPublicOrigin(context.Request));
+        context.Response.ContentType = "text/html; charset=utf-8";
+        await context.Response.WriteAsync(html);
     });
 }
 else

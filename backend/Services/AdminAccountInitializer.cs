@@ -46,8 +46,7 @@ public static class AdminAccountInitializer
 
         if (string.IsNullOrWhiteSpace(initialPassword))
         {
-            logger.LogWarning("No Admin:InitialPassword configured. The default development password is being used; change it immediately from the admin panel.");
-            initialPassword = "Admin@12345";
+            throw new InvalidOperationException("No admin account exists. Set Admin:InitialPassword with an environment variable or user secret before first startup.");
         }
 
         db.AdminUsers.Add(new AdminUser

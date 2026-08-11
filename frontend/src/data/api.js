@@ -1,19 +1,12 @@
 import { useEffect, useState } from 'react';
-import {
-  aboutIntroParagraphs,
-  awards,
-  biography,
-  books,
-  galleryImages,
-  newsArticles,
-  poemLanguages,
-  poems,
-  quickFacts,
-  siteSettings,
-  testimonials,
-} from './content.js';
-import { mediaSpotlightLinks } from './mediaSpotlight.js';
-import { videoPoetryItems } from './videoPoetry.js';
+import heroPortraitUrl from '../assets/backgrounds/hero-portrait.png';
+import mainBackgroundUrl from '../assets/backgrounds/main-background.png';
+import parallaxUrl from '../assets/decorative/parallax.png';
+import aboutPortraitUrl from '../assets/gallery/about1.jpg';
+import homeBookOneUrl from '../assets/mockups/hp-antologji-personale.png';
+import homeBookTwoUrl from '../assets/mockups/hp-ekspozite-me-enderra.png';
+import homeBookThreeUrl from '../assets/mockups/hp-rivali-adamit.png';
+import homeBookFourUrl from '../assets/mockups/hp-flirt.png';
 
 export const API_BASE = import.meta.env.VITE_API_BASE_URL
   || (['5173', '5174'].includes(window.location.port) ? `${window.location.protocol}//${window.location.hostname}:5000` : '');
@@ -23,6 +16,37 @@ const assetUrlMap = new Map(Object.entries(assetModules).map(([assetPath, url]) 
   `/assets/${assetPath.split('../assets/')[1]}`,
   url,
 ]));
+const siteAssetUrlMap = new Map([
+  ['/assets/backgrounds/hero-portrait.png', heroPortraitUrl],
+  ['/assets/backgrounds/main-background.png', mainBackgroundUrl],
+  ['/assets/decorative/parallax.png', parallaxUrl],
+  ['/assets/gallery/about1.jpg', aboutPortraitUrl],
+  ['/assets/mockups/hp-antologji-personale.png', homeBookOneUrl],
+  ['/assets/mockups/hp-ekspozite-me-enderra.png', homeBookTwoUrl],
+  ['/assets/mockups/hp-rivali-adamit.png', homeBookThreeUrl],
+  ['/assets/mockups/hp-flirt.png', homeBookFourUrl],
+]);
+
+const emptySiteSettings = {
+  logo: '',
+  subtitle: '',
+  heroTitle: '',
+  heroText: '',
+  location: '',
+  heroImagePath: '/assets/backgrounds/hero-portrait.png',
+  heroBackgroundPath: '/assets/backgrounds/main-background.png',
+  quoteParallaxPath: '/assets/decorative/parallax.png',
+  homeFeaturedBookMockupPath1: '/assets/mockups/hp-antologji-personale.png',
+  homeFeaturedBookMockupPath2: '/assets/mockups/hp-ekspozite-me-enderra.png',
+  homeFeaturedBookMockupPath3: '/assets/mockups/hp-rivali-adamit.png',
+  homeFeaturedBookMockupPath4: '/assets/mockups/hp-flirt.png',
+  aboutPortraitPath: '/assets/gallery/about1.jpg',
+  biography: [],
+  aboutIntroParagraphs: [],
+  quickFacts: [],
+  mediaSpotlightLinks: [],
+  socialLinks: [],
+};
 
 function parseJsonArray(value, fallback = []) {
   if (Array.isArray(value)) return value;
@@ -71,7 +95,7 @@ function normalizePageSection(section) {
   };
 }
 
-function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks, translations = [], pageSections = {}) {
+function normalizeSiteSettings(settings, socialLinks = [], translations = [], pageSections = {}) {
   const values = settingMap(settings);
   const translatedValues = translationMap(translations);
   const homeSections = pageSectionMap(pageSections.home);
@@ -85,12 +109,12 @@ function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks,
   const mediaLinksSection = mediaSections.get('spotlight-links');
 
   return {
-    ...siteSettings,
-    logo: getTranslation('logo', siteSettings.logo),
-    subtitle: getTranslation('subtitle', siteSettings.subtitle),
-    heroTitle: homeHero?.title ?? getTranslation('heroTitle', siteSettings.heroTitle),
-    heroText: homeHero?.content ?? getTranslation('heroText', siteSettings.heroText),
-    location: getTranslation('location', siteSettings.location),
+    ...emptySiteSettings,
+    logo: getTranslation('logo', emptySiteSettings.logo),
+    subtitle: getTranslation('subtitle', emptySiteSettings.subtitle),
+    heroTitle: homeHero?.title ?? getTranslation('heroTitle', emptySiteSettings.heroTitle),
+    heroText: homeHero?.content ?? getTranslation('heroText', emptySiteSettings.heroText),
+    location: getTranslation('location', emptySiteSettings.location),
     heroImagePath: values.get('heroImagePath') ?? '/assets/backgrounds/hero-portrait.png',
     heroBackgroundPath: values.get('heroBackgroundPath') ?? '/assets/backgrounds/main-background.png',
     quoteParallaxPath: values.get('quoteParallaxPath') ?? '/assets/decorative/parallax.png',
@@ -99,10 +123,10 @@ function normalizeSiteSettings(settings, socialLinks = siteSettings.socialLinks,
     homeFeaturedBookMockupPath3: values.get('homeFeaturedBookMockupPath3') ?? '/assets/mockups/hp-rivali-adamit.png',
     homeFeaturedBookMockupPath4: values.get('homeFeaturedBookMockupPath4') ?? '/assets/mockups/hp-flirt.png',
     aboutPortraitPath: values.get('aboutPortraitPath') ?? '/assets/gallery/about1.jpg',
-    biography: parseJsonArray(biographySection?.content ?? values.get('biography'), biography),
-    aboutIntroParagraphs: parseJsonArray(aboutIntroSection?.content ?? values.get('aboutIntroParagraphs'), aboutIntroParagraphs),
-    quickFacts: parseJsonArray(quickFactsSection?.extraJson ?? values.get('quickFacts'), quickFacts),
-    mediaSpotlightLinks: parseJsonArray(mediaLinksSection?.extraJson ?? values.get('mediaSpotlightLinks'), mediaSpotlightLinks),
+    biography: parseJsonArray(biographySection?.content ?? values.get('biography'), []),
+    aboutIntroParagraphs: parseJsonArray(aboutIntroSection?.content ?? values.get('aboutIntroParagraphs'), []),
+    quickFacts: parseJsonArray(quickFactsSection?.extraJson ?? values.get('quickFacts'), []),
+    mediaSpotlightLinks: parseJsonArray(mediaLinksSection?.extraJson ?? values.get('mediaSpotlightLinks'), []),
     socialLinks: socialLinks.map((link) => ({
       id: link.id,
       label: link.label,
@@ -171,12 +195,17 @@ function getYouTubeThumbnailUrl(url = '') {
   return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
 }
 
+function firstPresent(...values) {
+  return values.find((value) => typeof value === 'string' ? value.trim() : value) ?? '';
+}
+
 function normalizeNews(article) {
   const videoType = article.videoType ?? '';
   const videoUrl = article.videoUrl ?? '';
-  const youtubeThumbnail = String(videoType).toLowerCase() === 'youtube' ? getYouTubeThumbnailUrl(videoUrl) : '';
-  const image = article.imagePath ?? article.image ?? youtubeThumbnail;
-  const thumbnail = article.thumbnailImagePath ?? article.thumbnail ?? image ?? youtubeThumbnail;
+  const normalizedVideoType = String(videoType).toLowerCase();
+  const youtubeThumbnail = normalizedVideoType === 'youtube' ? getYouTubeThumbnailUrl(videoUrl) : '';
+  const image = firstPresent(article.imagePath, article.image, youtubeThumbnail);
+  const thumbnail = firstPresent(article.thumbnailImagePath, article.thumbnail, image, youtubeThumbnail);
   const relatedSources = parseJsonArray(article.relatedSourcesJson, article.relatedSources ?? []);
   const gallery = parseJsonArray(article.galleryImagesJson, article.galleryImages ?? []);
   const titleSlug = slugFromText(article.title);
@@ -195,7 +224,7 @@ function normalizeNews(article) {
     hiddenFromList: article.hiddenFromList ?? false,
     videoType,
     videoUrl,
-    videoPreviewUrl: String(videoType).toLowerCase() === 'local' ? videoUrl : '',
+    videoPreviewUrl: ['hosted', 'local'].includes(normalizedVideoType) ? videoUrl : '',
     featured: article.isFeatured ?? article.featured ?? false,
   };
 }
@@ -230,10 +259,6 @@ function normalizeVideoPoetry(item) {
     thumbnail: item.thumbnailImagePath ?? item.thumbnail ?? '',
     featured: item.isFeatured ?? item.featured ?? false,
   };
-}
-
-function getFallbackVideoPoetryItem(slug) {
-  return videoPoetryItems.find((item) => item.slug === slug || item.id === slug) ?? null;
 }
 
 function newestFirst(items) {
@@ -277,31 +302,30 @@ export function resolveMediaUrl(path) {
   if (!path) return '';
   if (/^(https?:|data:|blob:)/i.test(path)) return path;
   if (path.startsWith('/uploads/')) return `${API_BASE}${path}`;
-  if (path.startsWith('/assets/')) return assetUrlMap.get(path) ?? `${APP_BASE}${path.slice(1)}`;
+  if (path.startsWith('/assets/')) return assetUrlMap.get(path) ?? siteAssetUrlMap.get(path) ?? `${APP_BASE}${path.slice(1)}`;
   return path;
 }
 
 export function useCmsData(loader, fallback, deps = []) {
   const [data, setData] = useState(fallback);
-  const [isLoading, setIsLoading] = useState(Boolean(API_BASE));
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadData() {
-      if (!API_BASE) {
-        setData(fallback);
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
+      setError(null);
       try {
         const nextData = await loader();
         if (isMounted) setData(nextData);
       } catch (error) {
-        console.warn('CMS request failed, using local fallback:', error);
-        if (isMounted) setData(fallback);
+        console.warn('CMS request failed:', error);
+        if (isMounted) {
+          setError(error);
+          setData(fallback);
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -314,23 +338,23 @@ export function useCmsData(loader, fallback, deps = []) {
     };
   }, deps);
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 export const fallbackData = {
-  siteSettings,
-  books,
-  poems: newestFirst(poems),
-  poemLanguages,
-  newsArticles,
-  awards,
-  galleryImages: newestFirst(galleryImages),
-  testimonials: newestFirst(testimonials),
-  biography,
-  aboutIntroParagraphs,
-  quickFacts,
-  mediaSpotlightLinks,
-  videoPoetryItems: newestFirst(videoPoetryItems),
+  siteSettings: emptySiteSettings,
+  books: [],
+  poems: [],
+  poemLanguages: [],
+  newsArticles: [],
+  awards: [],
+  galleryImages: [],
+  testimonials: [],
+  biography: [],
+  aboutIntroParagraphs: [],
+  quickFacts: [],
+  mediaSpotlightLinks: [],
+  videoPoetryItems: [],
 };
 
 export const cms = {
@@ -408,17 +432,10 @@ export const cms = {
   },
   getVideoPoetry: async (language = 'en') => {
     const items = await request(`/api/video-poetry?lang=${encodeURIComponent(language)}`);
-    const sourceItems = Array.isArray(items) && items.length > 0 ? items : videoPoetryItems;
-    return newestFirst(sourceItems.map(normalizeVideoPoetry));
+    return newestFirst(items.map(normalizeVideoPoetry));
   },
   getVideoPoetryItem: async (slug, language = 'en') => {
-    try {
-      const item = await request(`/api/video-poetry/${slug}?lang=${encodeURIComponent(language)}`);
-      return normalizeVideoPoetry(item);
-    } catch {
-      const fallbackItem = getFallbackVideoPoetryItem(slug);
-      if (!fallbackItem) throw new Error(`Video poetry item "${slug}" was not found.`);
-      return normalizeVideoPoetry(fallbackItem);
-    }
+    const item = await request(`/api/video-poetry/${slug}?lang=${encodeURIComponent(language)}`);
+    return normalizeVideoPoetry(item);
   },
 };

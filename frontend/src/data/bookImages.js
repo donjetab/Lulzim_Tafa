@@ -25,6 +25,10 @@ function resolveMockupPath(path) {
     ?? resolveMediaUrl(path);
 }
 
+function resolveBookImagePath(path) {
+  return resolveMockupPath(path);
+}
+
 export function getHomeBookMockupPath(book, siteSettings, index) {
   return siteSettings?.[`homeFeaturedBookMockupPath${index + 1}`]
     || homeBookMockupsBySlug[book?.slug]
@@ -38,7 +42,9 @@ export function getBookMockupImage(book, options = {}) {
     preferHomeMockup ? getHomeBookMockupPath(book, siteSettings, index) : '',
     book?.mockupImagePath,
     book?.mockupImage,
+    book?.coverImagePath,
+    book?.coverImage,
   ];
 
-  return paths.map(resolveMockupPath).find(Boolean) || '';
+  return paths.map(resolveBookImagePath).find(Boolean) || '';
 }

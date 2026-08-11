@@ -1,15 +1,13 @@
-import { useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-
-const newsImageAssets = import.meta.glob('../assets/news/*', { eager: true, query: '?url', import: 'default' });
+import { slugify } from '../utils/slugify.js';
 
 function getImage(path) {
   if (!path) return null;
-  if (/^(https?:|data:|blob:)/i.test(path) || path.startsWith('/uploads/')) return resolveMediaUrl(path);
-  const filename = path.split('/').pop();
-  return Object.entries(newsImageAssets).find(([assetPath]) => assetPath.endsWith(`/${filename}`))?.[1] ?? resolveMediaUrl(path);
+  return resolveMediaUrl(path);
 }
 
 function getYoutubeEmbedUrl(url) {
@@ -83,11 +81,23 @@ function BackToNewsLink({ to }) {
 export default function NewsDetails() {
   const { slug } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const [previewImage, setPreviewImage] = useState(null);
-  const { data: newsArticles } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
-  const item = newsArticles.find((article) => article.slug === slug || article.savedSlug === slug);
+  const { data: newsArticles, isLoading } = useCmsData(() => cms.getNews(language), fallbackData.newsArticles, [language]);
+  const item = newsArticles.find((article) => article.slug === slug || article.savedSlug === slug || slugify(article.title) === slug);
 
+  useEffect(() => {
+    if (!item || language !== 'sq') return;
+    const translatedSlug = slugify(item.title) || item.slug;
+    if (slug !== translatedSlug) navigate(`/sq/lajme/${translatedSlug}`, { replace: true, state: location.state });
+  }, [item, language, location.state, navigate, slug]);
+
+  useEffect(() => {
+    if (item?.title) document.title = `${item.title} | Lulzim Tafa`;
+  }, [item?.title]);
+
+  if (isLoading) return <section className="section"><h1>Loading article...</h1></section>;
   if (!item) return <section className="section"><h1>Article not found</h1></section>;
 
   const image = getImage(item.image);

@@ -1,8 +1,48 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { NavLink } from './LocalizedLink.jsx';
 import headerLogo from '../assets/logo/logo-landscape-white_gold.png';
 import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import { localizePublicPath, normalizePublicPath } from '../i18n/localizedRoutes.js';
+
+const seoContent = {
+  en: {
+    home: ['Lulzim Tafa | Academic, Author and Poet', 'Official website of Lulzim Tafa, Kosovar Albanian academic, author and poet. Explore his biography, books, poetry, awards and latest news.'],
+    about: ['About Lulzim Tafa | Biography', 'Discover the biography, academic career and literary work of Kosovar Albanian poet and author Lulzim Tafa.'],
+    testimonials: ['Testimonials about Lulzim Tafa', 'Read reflections and testimonials about the work and literary influence of Lulzim Tafa.'],
+    books: ['Books by Lulzim Tafa', 'Explore poetry books, publications and translated editions by Lulzim Tafa.'],
+    poetry: ['Poetry by Lulzim Tafa', 'Read selected poems and translations by Kosovar Albanian poet Lulzim Tafa.'],
+    poetryHouse: ['Poetry House | Lulzim Tafa', 'Discover the Poetry House and Poetry Theatre founded by Lulzim Tafa in Prishtina.'],
+    news: ['News and Interviews | Lulzim Tafa', 'Latest news, interviews and public appearances by author and academic Lulzim Tafa.'],
+    gallery: ['Gallery | Lulzim Tafa', 'Photos from the literary, academic and public life of Lulzim Tafa.'],
+    awards: ['Awards and Recognition | Lulzim Tafa', 'Explore international awards and distinctions received by poet and academic Lulzim Tafa.'],
+  },
+  sq: {
+    home: ['Lulzim Tafa | Akademik, autor dhe poet', 'Faqja zyrtare e Lulzim Tafës, akademik, autor dhe poet shqiptar nga Kosova. Shfletoni biografinë, librat, poezinë, çmimet dhe lajmet e tij.'],
+    about: ['Rreth Lulzim Tafës | Biografia', 'Zbuloni biografinë, karrierën akademike dhe krijimtarinë letrare të poetit dhe autorit Lulzim Tafa.'],
+    testimonials: ['Vlerësime për Lulzim Tafën', 'Lexoni vlerësime dhe reflektime për veprën dhe ndikimin letrar të Lulzim Tafës.'],
+    books: ['Librat e Lulzim Tafës', 'Shfletoni librat me poezi, botimet dhe veprat e përkthyera të Lulzim Tafës.'],
+    poetry: ['Poezi nga Lulzim Tafa', 'Lexoni poezi të zgjedhura dhe përkthime nga poeti shqiptar i Kosovës, Lulzim Tafa.'],
+    poetryHouse: ['Shtëpia e Poezisë | Lulzim Tafa', 'Zbuloni Shtëpinë e Poezisë dhe Teatrin e Poezisë të themeluar nga Lulzim Tafa në Prishtinë.'],
+    news: ['Lajme dhe intervista | Lulzim Tafa', 'Lajmet, intervistat dhe paraqitjet më të fundit publike të autorit dhe akademikut Lulzim Tafa.'],
+    gallery: ['Galeria | Lulzim Tafa', 'Fotografi nga jeta letrare, akademike dhe publike e Lulzim Tafës.'],
+    awards: ['Çmime dhe mirënjohje | Lulzim Tafa', 'Shfletoni çmimet dhe mirënjohjet ndërkombëtare të poetit dhe akademikut Lulzim Tafa.'],
+  },
+};
+
+function getSeoSection(path) {
+  if (path === '/') return 'home';
+  if (path.startsWith('/about')) return 'about';
+  if (path.startsWith('/testimonials')) return 'testimonials';
+  if (path.startsWith('/books')) return 'books';
+  if (path.startsWith('/poetry-house')) return 'poetryHouse';
+  if (path.startsWith('/poetry')) return 'poetry';
+  if (path.startsWith('/news')) return 'news';
+  if (path.startsWith('/gallery')) return 'gallery';
+  if (path.startsWith('/awards')) return 'awards';
+  return 'home';
+}
 
 const navItems = [
   ['nav.home', '/'],
@@ -56,9 +96,6 @@ const revealSelectors = [
   '.news-filter',
   '.news-card',
   '.news-pagination',
-  '.news-detail',
-  '.news-detail-image',
-  '.news-detail-body',
   '.news-sources',
   '.news-source-card',
   '.news-gallery button',
@@ -107,11 +144,47 @@ function SocialIcon({ type }) {
 export default function Layout() {
   const location = useLocation();
   const { language, toggleLanguage, t } = useLanguage();
+  const publicPath = normalizePublicPath(location.pathname, language);
   const { data: siteSettings } = useCmsData(() => cms.getSiteSettings(language), fallbackData.siteSettings, [language]);
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isVideoPoetry = location.pathname === '/poetry/video' || (location.pathname === '/poetry' && location.search === '?view=video');
-  const isWrittenPoetry = location.pathname === '/poetry' && !isVideoPoetry;
+  const isVideoPoetry = publicPath === '/poetry/video' || (publicPath === '/poetry' && location.search === '?view=video');
+  const isWrittenPoetry = publicPath === '/poetry' && !isVideoPoetry;
+
+  useEffect(() => {
+    const origin = window.location.origin;
+    const localizedPath = (code) => `${localizePublicPath(publicPath, code)}${location.search}`;
+    const [title, description] = seoContent[language][getSeoSection(publicPath)];
+    document.title = title;
+    let descriptionMeta = document.head.querySelector('meta[name="description"]');
+    if (!descriptionMeta) {
+      descriptionMeta = document.createElement('meta');
+      descriptionMeta.name = 'description';
+      document.head.appendChild(descriptionMeta);
+    }
+    descriptionMeta.content = description;
+    const links = [
+      ['canonical', null, localizedPath(language)],
+      ['alternate', 'en', localizedPath('en')],
+      ['alternate', 'sq', localizedPath('sq')],
+      ['alternate', 'x-default', localizedPath('en')],
+    ].map(([rel, hreflang, href]) => {
+      const selector = hreflang
+        ? `link[rel="${rel}"][hreflang="${hreflang}"]`
+        : `link[rel="${rel}"]:not([hreflang])`;
+      let link = document.head.querySelector(selector);
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = rel;
+        if (hreflang) link.hreflang = hreflang;
+        document.head.appendChild(link);
+      }
+      link.href = `${origin}${href}`;
+      return link;
+    });
+
+    return () => links.forEach((link) => link.remove());
+  }, [language, location.search, publicPath]);
 
   useEffect(() => {
     const main = document.querySelector('.site-shell > main');
@@ -171,12 +244,12 @@ export default function Layout() {
     if (itemTo === '/poetry') return isWrittenPoetry ? 'active' : undefined;
     if (itemTo === '/poetry/video') return isVideoPoetry ? 'active' : undefined;
     if (itemTo === '/about#biography') {
-      return location.pathname === '/about' && location.hash === '#biography' ? 'active' : undefined;
+      return publicPath === '/about' && location.hash === '#biography' ? 'active' : undefined;
     }
     if (itemTo === '/about#testimonials') {
-      return location.pathname === '/about' && location.hash === '#testimonials' ? 'active' : undefined;
+      return publicPath === '/about' && location.hash === '#testimonials' ? 'active' : undefined;
     }
-    if (itemTo === '/gallery') return location.pathname === '/gallery' ? 'active' : undefined;
+    if (itemTo === '/gallery') return publicPath === '/gallery' ? 'active' : undefined;
     return undefined;
   }
 

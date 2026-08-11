@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { getBookMockupImage } from '../data/bookImages.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
@@ -6,9 +7,10 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 export default function BookDetails() {
   const { slug } = useParams();
   const { language } = useLanguage();
-  const { data: books } = useCmsData(() => cms.getBooks(language), fallbackData.books, [language]);
+  const { data: books, isLoading } = useCmsData(() => cms.getBooks(language), fallbackData.books, [language]);
   const book = books.find((item) => item.slug === slug);
 
+  if (isLoading) return <section className="section"><h1>Loading book...</h1></section>;
   if (!book) return <section className="section"><h1>Book not found</h1></section>;
 
   const cover = getBookMockupImage(book);

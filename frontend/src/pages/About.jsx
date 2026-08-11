@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import decorationImage from '../assets/decorative/bio-decoration.png';

@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  aboutIntroParagraphs,
-  biography,
-  quickFacts,
-  siteSettings,
-} from '../data/content.js';
-import { mediaSpotlightLinks } from '../data/mediaSpotlight.js';
 import { languageOptions, translationGroups, translations } from '../i18n/LanguageContext.jsx';
 import adminLogo from '../assets/logo/logo_landscape.png';
 import aboutPortraitImage from '../assets/gallery/about1.jpg';
@@ -16,11 +9,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL
 const APP_BASE = import.meta.env.BASE_URL || '/';
 
 const homepageDefaults = {
-  logo: siteSettings.logo ?? 'Lulzim Tafa',
-  subtitle: siteSettings.subtitle ?? 'Academic & Author',
-  heroTitle: siteSettings.heroTitle ?? '',
-  heroText: siteSettings.heroText ?? '',
-  location: siteSettings.location ?? '',
+  logo: 'Lulzim Tafa',
+  subtitle: 'Academic & Author',
+  heroTitle: '',
+  heroText: '',
+  location: '',
   heroImagePath: '/assets/backgrounds/hero-portrait.png',
   heroBackgroundPath: '/assets/backgrounds/main-background.png',
   quoteParallaxPath: '/assets/decorative/parallax.png',
@@ -132,10 +125,10 @@ function setSectionSettingRecord(records, key, language, value) {
 const siteSettingDefaults = {
   ...homepageDefaults,
   aboutPortraitPath: '/assets/gallery/about1.jpg',
-  biography: paragraphsToText(biography),
-  aboutIntroParagraphs: paragraphsToText(aboutIntroParagraphs),
-  quickFacts: quickFactsToRows(quickFacts),
-  mediaSpotlightLinks: mediaLinksToRows(mediaSpotlightLinks),
+  biography: '',
+  aboutIntroParagraphs: '',
+  quickFacts: [],
+  mediaSpotlightLinks: [],
 };
 
 const siteSettingParagraphKeys = new Set([
@@ -531,6 +524,11 @@ const translationFieldLabels = {
   'nav.news': 'Footer/Menu: News',
   'nav.gallery': 'Menu: Gallery',
   'nav.awards': 'Menu: Awards',
+  'gallery.eyebrow': 'Small heading above the gallery title',
+  'gallery.title': 'Gallery page title',
+  'gallery.text': 'Gallery page subtitle',
+  'awards.eyebrow': 'Small heading above the awards title',
+  'awards.title': 'Awards page title',
   'footer.description': 'Footer: short description',
   'footer.navigation': 'Footer heading: Navigation',
   'footer.work': 'Footer heading: Work',
@@ -555,6 +553,8 @@ function getTranslationFieldLabel(key) {
     books: 'Books page',
     poetry: 'Poetry page',
     news: 'News page',
+    gallery: 'Gallery page',
+    awards: 'Awards page',
   };
 
   return `${sectionLabels[section] || section}: ${label}`;
@@ -584,6 +584,14 @@ const translationGroupDetails = {
   News: {
     badge: 'NEWS',
     description: 'News page hero, search controls, filters, and media labels.',
+  },
+  Gallery: {
+    badge: 'GALLERY',
+    description: 'Gallery page header title, small heading, and descriptive subtitle.',
+  },
+  Awards: {
+    badge: 'AWARDS',
+    description: 'Awards page header title and small heading.',
   },
   Footer: {
     badge: 'FOOT',
@@ -1074,7 +1082,20 @@ function getRecordMeta(item) {
 }
 
 function getNewsImage(item) {
-  return item.thumbnailImagePath || item.imagePath || item.image;
+  const directImage = item.thumbnailImagePath || item.thumbnail || item.imagePath || item.image;
+  if (directImage) return directImage;
+
+  const videoType = String(item.videoType || '').toLowerCase();
+  if (videoType === 'youtube') return getYouTubeThumbnailUrl(item.videoUrl);
+
+  return '';
+}
+
+function getNewsVideoPreview(item) {
+  const videoType = String(item.videoType || '').toLowerCase();
+  if (!['hosted', 'local'].includes(videoType)) return '';
+
+  return item.videoUrl || '';
 }
 
 function getBookImage(item) {
@@ -1450,16 +1471,21 @@ function resolveAdminImagePath(path) {
 function AdminNewsImage({ item }) {
   const [hasError, setHasError] = useState(false);
   const image = resolveAdminImagePath(getNewsImage(item));
+  const videoPreview = resolvePublicAssetPath(getNewsVideoPreview(item));
 
   useEffect(() => {
     setHasError(false);
-  }, [image]);
+  }, [image, videoPreview]);
 
-  if (!image || hasError) {
-    return <span>No image</span>;
+  if (image && !hasError) {
+    return <img src={image} alt="" onError={() => setHasError(true)} />;
   }
 
-  return <img src={image} alt="" onError={() => setHasError(true)} />;
+  if (videoPreview && !hasError) {
+    return <video src={encodeURI(videoPreview)} muted playsInline preload="metadata" onError={() => setHasError(true)} />;
+  }
+
+  return <span>No image</span>;
 }
 
 function AdminBookImage({ item }) {
@@ -1820,6 +1846,40 @@ function SiteSettingEditor({ settingKey, type, value, onChange }) {
   return <input value={value ?? ''} onChange={(event) => onChange(event.target.value)} />;
 }
 
+function NewsVideoPreview({ draft }) {
+  const [hasError, setHasError] = useState(false);
+  const videoType = String(draft.videoType || 'youtube').toLowerCase();
+  const youtubeThumbnail = videoType === 'youtube' ? getYouTubeThumbnailUrl(draft.videoUrl) : '';
+  const image = resolveAdminImagePath(draft.thumbnailImagePath || draft.imagePath || youtubeThumbnail);
+  const hostedVideo = ['hosted', 'local'].includes(videoType) ? resolvePublicAssetPath(draft.videoUrl) : '';
+
+  useEffect(() => {
+    setHasError(false);
+  }, [image, hostedVideo]);
+
+  if (image && !hasError) {
+    return (
+      <figure className="admin-video-preview">
+        <img src={image} alt="" onError={() => setHasError(true)} />
+      </figure>
+    );
+  }
+
+  if (hostedVideo && !hasError) {
+    return (
+      <figure className="admin-video-preview">
+        <video src={encodeURI(hostedVideo)} controls preload="metadata" onError={() => setHasError(true)} />
+      </figure>
+    );
+  }
+
+  return (
+    <div className="admin-video-preview is-empty">
+      <span>Video preview</span>
+    </div>
+  );
+}
+
 function NewsEditor({
   draft,
   updateDraft,
@@ -1833,6 +1893,7 @@ function NewsEditor({
   const isExternalOnly = editorType === 'external';
   const isVideoStory = editorType === 'video';
   const hasRelatedSources = editorType === 'article-sources';
+  const selectedVideoType = String(draft.videoType || 'youtube').toLowerCase();
 
   function changeType(nextType) {
     updateDraft('_editorType', nextType);
@@ -1941,8 +2002,12 @@ function NewsEditor({
             </AdminField>
             <AdminField label="Video URL" isWide>
               <input value={draft.videoUrl ?? ''} onChange={(event) => updateDraft('videoUrl', event.target.value)} />
+              {selectedVideoType === 'hosted' ? (
+                <input className="admin-file-input" type="file" accept="video/*" onChange={(event) => uploadFile(event, 'videoUrl')} />
+              ) : null}
             </AdminField>
           </div>
+          <NewsVideoPreview draft={draft} />
         </section>
       ) : null}
 
@@ -2487,11 +2552,18 @@ export default function Admin() {
       if (adminContentTranslationFields[config.key]) {
         setHomeSettingRecords(records);
       }
-      setHomePreviewBooks([]);
-      setItems(Array.isArray(data)
+      const nextItems = Array.isArray(data)
         ? data.map((item) => applyAdminContentTranslations(config.key, item, records, adminLanguage))
-        : []);
-      setDraft(config.empty);
+        : [];
+      setHomePreviewBooks([]);
+      setItems(nextItems);
+      setDraft((current) => {
+        if (!isModalOpen) return config.empty;
+        if (!current?.id) return Object.keys(current ?? {}).length ? current : config.empty;
+
+        const translatedItem = nextItems.find((item) => item.id === current.id);
+        return translatedItem ? normalizeItem(config, translatedItem) : current;
+      });
 
       if (config.key === 'poems') {
         const languages = await request('/api/poems/languages');

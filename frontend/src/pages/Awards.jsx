@@ -4,7 +4,7 @@ import { cms, fallbackData, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 export default function Awards() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { data: awards } = useCmsData(() => cms.getAwards(language), fallbackData.awards, [language]);
   const awardsWithLayout = awards.map((award, index) => ({
     ...award,
@@ -15,7 +15,7 @@ export default function Awards() {
 
   return (
     <>
-      <PageHero eyebrow="Awards" title="Awards & Recognition" variant="awards" />
+      <PageHero eyebrow={t('awards.eyebrow')} title={t('awards.title')} variant="awards" />
       <section className="section awards-section">
         <div className="award-grid award-portrait-grid">
           {portraitAwards.map((award) => (

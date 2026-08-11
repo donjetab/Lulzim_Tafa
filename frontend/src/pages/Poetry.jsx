@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink.jsx';
 import PoemCard from '../components/PoemCard.jsx';
 import { cms, fallbackData, resolveMediaUrl, useCmsData } from '../data/api.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import { normalizePublicPath } from '../i18n/localizedRoutes.js';
 import {
   getListMemoryKey,
   readListState,
@@ -32,7 +34,8 @@ export default function Poetry() {
   const [language, setLanguage] = useState(() => rememberedState?.language ?? 'All');
   const [titleQuery, setTitleQuery] = useState(() => rememberedState?.titleQuery ?? '');
   const [visibleCount, setVisibleCount] = useState(() => rememberedState?.visibleCount ?? POEMS_PER_BATCH);
-  const activeView = location.pathname === '/poetry/video' || searchParams.get('view') === 'video' ? 'video' : 'written';
+  const normalizedPath = normalizePublicPath(location.pathname, siteLanguage);
+  const activeView = normalizedPath === '/poetry/video' || searchParams.get('view') === 'video' ? 'video' : 'written';
   const normalizedTitleQuery = normalizeSearchText(titleQuery.trim());
   const filteredPoems = useMemo(() => {
     return poems.filter((poem) => {
